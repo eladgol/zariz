@@ -1,0 +1,19 @@
+
+{% extends "layout.html" %}
+{% block content %}
+{% load staticfiles %}
+{% load static %}
+{% if user.is_authenticated %}
+<label>Hello {{ user.username }}!</label>
+{% else %}
+<label>No User</label>
+{% endif %}
+{% endblock %}
+
+
+{% block scripts %}
+
+{% load static %}
+<script src="{% static 'scripts/jquery.validate.min.js' %}"></script>
+
+{% endblock %}

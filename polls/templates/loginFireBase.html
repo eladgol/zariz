@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Sample FirebaseUI App</title>
+    <script src="https://www.gstatic.com/firebasejs/5.0.2/firebase.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyD8R2stPy8Lgr_-o7rLTXIIqtSF3giXMLM",
+        authDomain: "zariz-204206.firebaseapp.com",
+        databaseURL: "https://zariz-204206.firebaseio.com",
+        projectId: "zariz-204206",
+        storageBucket: "zariz-204206.appspot.com",
+        messagingSenderId: "357060023149"
+      };
+      firebase.initializeApp(config);
+    </script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
+    {% csrf_token %}
+    <script type="text/javascript">
+      // FirebaseUI config.
+      var uiConfig = {
+        callbacks: {
+          signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+             console.log("success1")
+              $.ajax({
+                  url: "{% url 'firebaseSuccess' %}",
+                  method: 'GET',
+                  data : {csrfmiddlewaretoken: "{{ csrf_token }}",
+                    'userEmail' : String(authResult.user.email)
+              //      'redirectUrl' :redirectUrl
+                  },
+                  dataType: 'json',
+                  success: function(data){
+                    console.log("success")
+                  },
+                  error: function(error_data){
+                      console.log("error")
+                      console.log(error_data)
+                  }
+              });
+            return true;
+          },
+          uiShown: function() {
+            console.log("UI shown")
+            return true;
+          }
+        },
+        signInSuccessUrl: "{% url 'profilePage' %}",
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+          firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+          firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+          firebase.auth.GithubAuthProvider.PROVIDER_ID,
+          firebase.auth.EmailAuthProvider.PROVIDER_ID,
+          firebase.auth.PhoneAuthProvider.PROVIDER_ID
+        ],
+        // Terms of service url.
+        //tosUrl: '<your-tos-url>'
+      };
+
+      // Initialize the FirebaseUI Widget using Firebase.
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      // The start method will wait until the DOM is loaded.
+      ui.start('#firebaseui-auth-container', uiConfig);
+    </script>
+  </head>
+  <body>
+    <!-- The surrounding HTML is left untouched by FirebaseUI.
+         Your app may use that space for branding, controls and other customizations.-->
+    <h1>Welcome to My Awesome App</h1>
+    <div id="firebaseui-auth-container"></div>
+  </body>
+</html>

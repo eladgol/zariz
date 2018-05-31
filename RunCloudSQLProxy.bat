@@ -1,0 +1,1 @@
+c:\Users\eladg\Downloads\cloud_sql_proxy_x64 -instances=zariz-204206:europe-west4:zariz-sql3=tcp:3306

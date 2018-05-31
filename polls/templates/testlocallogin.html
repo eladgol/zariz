@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% load staticfiles %}
+    
+{% load static %}
+
+<section>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><section id="loginForm" class="containerLogin">
+        
+        <form action="." method="post" class="form-horizontal" >
+            {% csrf_token %}
+            <div class="form-group">
+                <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span>
+                <div class="col-md-10">
+                        {% csrf_token %}
+                    {{ form.username }}
+                </div>
+                </span>
+                
+            </div>
+            <div class="form-group">
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-lock"></span>
+                    <label for="id_password"></label>
+                    <div class="col-md-10">
+                            {% csrf_token %}
+                        {{ form.password }}
+                    </div>
+                </span>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                        {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}" />
+                    <button type="submit">
+                            <span class="glyphicon glyphicon-log-in"></span>
+                    </button>
+                </div>
+            </div>
+            {% if form.errors %}
+            <p class="validation-summary-errors">שם משתמש או סיסמא אינם קיימים</p>
+            {% endif %}
+        </form>
+    </section>
+    {% endblock %}
+
+
+    {% block scripts %}
+    
+    {% load static %}
+    <script src="{% static 'scripts/jquery.validate.min.js' %}"></script>
+    
+    {% endblock %}
+    

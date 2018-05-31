@@ -1,0 +1,98 @@
+
+{% extends "layout.html" %}
+
+{% block content %}
+{% load staticfiles %}
+    
+{% load static %}
+<style>
+    body {
+    margin: 40px;
+    }
+
+    .sidebar {
+    grid-area: sidebar;
+    background-color:#f6aa1c;
+    }
+
+    .content {
+    grid-area: content;
+    background-color:#A63C06
+    }
+
+    .header {
+    grid-area: header;
+    background-color: #420217;
+    }
+    .footer {
+    grid-area: footer;
+    background-color:#220901;   
+    }
+
+    .wrapper {
+            display: grid;
+            grid-gap: 5%;
+            align-content: center;
+            align-items: center;
+            grid-template-columns: 16vw 16vw 16vw 16vw 16vw;
+            grid-template-areas:
+            "header  header  header header header"
+            "sidebar sidebar content content content"
+            "footer  footer  footer footer footer";
+            background-color: #fff;
+            opacity: 0.8;
+        }
+
+
+    .box {
+    color: #fff;
+    border-radius: 5px;
+    padding: 50px;
+    font-size: 150%;
+    }
+
+
+    .topleft {
+    position: absolute;
+    top: 0;
+    left: 0;
+    }
+
+    .topright {
+    position: absolute;
+    top: 0;
+    right: 0;
+    }
+
+    .bottomleft {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    }
+
+    .bottomright {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    }
+</style>
+<div class="wrapper">
+    <div class="box header" dir="rtl">כניסה</div>
+    <div class="box sidebar">
+        {%include 'loginBox.html'%}
+    </div>
+    <div class="box content">
+        {%include 'firebaseLoginBox.html'%}
+    </div>
+    <div class="box footer"></div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+{% load static %}
+<script src="{% static 'scripts/jquery.validate.min.js' %}"></script>
+
+{% endblock %}

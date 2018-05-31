@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label" : "python",
+            "command": "python",
+            "type": "shell",
+            "args": [
+                "C:/Program Files (x86)/Google/google_appengine/dev_appserver.py",
+                "--python_startup_script=${workspaceFolder}/pydev_startup.py",
+                "--automatic_restart=no",
+                "--max_module_instances=default:1",
+                "${workspaceFolder}/app.yaml"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

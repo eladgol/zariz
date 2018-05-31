@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% load staticfiles %}
+    
+{% load static %}
+<style>
+        body, html {
+            height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+  
+  .bgimg-1, .bgimg-2, .bgimg-3 {
+    position: relative;
+    opacity:1;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size:cover;
+  
+  }
+  .bgimg-1 {
+    background-image: url("{% static 'content/Poel2.jpg' %}") repeat 0 0;
+  }
+  
+  .caption {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    text-align: center;
+    color: #000;
+  }
+  
+  .caption span.border {
+    background-color: #111;
+    color: #fff;
+    padding: 18px;
+    font-size: 25px;
+    letter-spacing: 10px;
+  }
+  
+  h3 {
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    font: 20px "Lato", sans-serif;
+    color: #111;
+  }
+  .containerLogin {
+    position:relative;
+    right: 0;
+    margin-left:30vw;
+    margin-right: 10vw;
+    margin-top:30vh;
+    padding: 16px;
+    background-color: white;   
+  }
+  .btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    opacity: 0.9;
+  }
+  
+  .btn:hover {
+    opacity: 1;
+  }
+</style>
+<h2>{{ title }}</h2>
+<div class="bgimg-1">
+<div class="row">
+    <div class="col-md-8">
+        <section id="loginForm" class="containerLogin">
+            <form action="." method="post" class="form-horizontal" >
+                {% csrf_token %}
+                <h4>Use a local account to log in.</h4>
+                <hr />
+                <div class="form-group">
+                    <label for="id_username" class="col-md-2 control-label">User name</label>
+                    <div class="col-md-10">
+                        {{ form.username }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_password" class="col-md-2 control-label">Password</label>
+                    <div class="col-md-10">
+                        {{ form.password }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="hidden" name="next" value="{{ next }}" />
+                        <input type="submit" value="Log in" class="btn btn-default" />
+                    </div>
+                </div>
+                {% if form.errors %}
+                <p class="validation-summary-errors">Please enter a correct user name and password.</p>
+                {% endif %}
+            </form>
+        </section>
+    </div>
+    <div class="col-md-4">
+        <section id="socialLoginForm"></section>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+
+{% load static %}
+<script src="{% static 'scripts/jquery.validate.min.js' %}"></script>
+
+{% endblock %}
