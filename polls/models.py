@@ -29,9 +29,9 @@ class UserFirebaseDB(models.Model):
     localUser = models.CharField(max_length=200)
     localPassword = models.CharField(max_length=50)
 
-class Workers(model.Model):
+class Workers(models.Model):
     occupationFieldListString = models.CharField(max_length=2048)
     firstName = models.CharField(max_length=200)
     lastName = models.CharField(max_length=200)
     portrait = models.ImageField( default = 'content/portraits/no-portrait.png')
-    
+    localUser = models.CharField(max_length=200)

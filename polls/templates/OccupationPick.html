@@ -1,0 +1,83 @@
+
+{% load staticfiles %}
+    
+{% load static %}
+<html xmlns="http://www.w3.org/1999/xhtml" lang="he" xml:lang="he" dir="rtl">
+<script src="{% static 'scripts/jquery-1.10.2.js' %}"></script>
+<script src="{% static 'scripts/bootstrap.js' %}"></script>
+<script src="{% static 'scripts/respond.js' %}"></script>
+<style>
+    label {
+        display: block;
+        text-align: center;
+        line-height: 150%;
+        font-size: 10vh;
+    }
+    .grid-container {
+        display: grid;
+    }
+    
+    .grid-container--fill {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-auto-columns: auto;
+        direction: rtl;
+    }
+    
+    .grid-container--fit {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+    .grid-element {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+        border-radius: 3vw 3vh;
+        padding: 3vw;
+        margin:1vw;      
+        border: 1px solid blue;
+    }
+    .toggle-on {
+        border: 2px solid limegreen;
+    }
+    
+</style>
+{% block content %}
+
+<label style="align-content: center">בחר תחומי עיסוק</label>
+<div class="grid-container grid-container--fill">
+    {% for field in fields %} 
+        <div class="grid-element toggle-off">{{field}}</div>
+    {% endfor %}
+</div>
+<script>
+    var listOfOccupations = [];
+    $('.grid-element').on('click', function(e){
+        e.preventDefault();
+        $(this).toggleClass('toggle-on');
+        i = listOfOccupations.indexOf($(this).html());
+        if (i > -1) {
+            listOfOccupations.splice(i, 1);
+        }
+        else {
+            listOfOccupations.push($(this).html());
+        }
+        $.ajax({
+            url: "{% url 'updateOccupation' %}",
+            method: 'POST',
+            data : {
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                'occupationList' : listOfOccupations
+            },
+            dataType: 'json',
+            success: function(data){
+                console.log(listOfOccupations)            
+                console.log("success")
+            },
+            error: function(error_data){
+                console.log("error");
+                console.log(error_data)
+            }
+        });
+    });
+</script>
+{% endblock content %}

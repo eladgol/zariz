@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2015 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import unicode_literals
+import ast
+import codecs
+import locale
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from models import UserFirebaseDB
+from models import UserFirebaseDB, Workers
 import django.contrib.auth
 import django.contrib.auth.views
 from django.contrib.auth.decorators import login_required
@@ -64,6 +69,17 @@ def testlocallogin(request):
         {}
     )
  
+def updateOccupation(request):
+    occupaitonList = request.POST.getlist('occupationList[]', None)
+    # does user exist
+    try:
+        worker = Workers.objects.get(localUser=request.user.username)
+    except Exception as e:
+        worker = Workers(localUser=request.user)
+    worker.occupationFieldListString = str(occupaitonList)
+    worker.save()
+    payload = {'success': True}
+    return JsonResponse(payload)
 
 def firebaseSuccess(request):
     userEmail = request.GET.get('userEmail', None)
@@ -103,4 +119,20 @@ def profilePage(request):
         request,
         'profilePage.html',
         {}
+    )
+
+def occupationPage(request):
+    locale.setlocale(locale.LC_ALL, '')
+    sData = codecs.open('static/content/settings.json', encoding='utf-8').read()
+    #with open('static/content/settings.json') as f:
+    #    sData = f.read()
+    data = ast.literal_eval(sData)
+    #data = ['aaa','bbb','ccc','ddd','eee','fff','ggg','hhh']
+    return render(
+        request,
+        'OccupationPick.html',
+        {
+             'fields' : data['occupationFields']
+             #'fields' : data
+        }
     )

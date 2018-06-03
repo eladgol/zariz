@@ -17,7 +17,7 @@ from django.contrib import admin
 
 import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin
-from polls.views import firebaseSuccess
+from polls.views import firebaseSuccess, occupationPage, updateOccupation
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -39,6 +39,8 @@ urlpatterns = [
     url(r'^fire/$', loginFirebase),
     url(r'^firebaseSuccess/', firebaseSuccess, name="firebaseSuccess"),
     url(r'^accounts/profile/', profilePage, name='profilePage'),
+    url(r'^occupation', occupationPage, name='occupationPage'),
+    url(r'^updateOccupation',updateOccupation, name='updateOccupation'),
     url(r'^testlocallogin/', django.contrib.auth.views.login,
     {
         'template_name': 'testlocallogin.html',
