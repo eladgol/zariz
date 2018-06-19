@@ -22,7 +22,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from models import UserFirebaseDB, Workers
+from models import UserFirebaseDB, Workers, BusyEvent
 import django.contrib.auth
 import django.contrib.auth.views
 from django.contrib.auth.decorators import login_required
@@ -68,7 +68,21 @@ def testlocallogin(request):
         'testlocallogin.html',
         {}
     )
- 
+
+def updateDates(request):
+    occupaitonList = request.POST.getlist('occupationList[]', None)
+    # does user exist
+    try:
+        worker = Workers.objects.get(localUser=request.user.username)
+    except Exception as e:
+        print("Error")
+        return JsonResponse({'error' : True})
+    BusyEvent()
+    
+    payload = {'success': True}
+    return JsonResponse(payload)
+
+
 def updateOccupation(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
     # does user exist
@@ -87,15 +101,15 @@ def firebaseSuccess(request):
     try:
         fbUser = UserFirebaseDB.objects.get(fireBaseUser=userEmail)
     except:
-        fbUser = UserFirebaseDB(fireBaseUser=userEmail, localUser=userEmail, localPassword="zariz001")
+        fbUser = UserFirebaseDB(fireBaseUser=userEmail, localUser=userEmail, localPassword="zariz001", userID="NotSetYet")
         fbUser.save()
-
     try:
         user = User.objects.get(username=fbUser.localUser)
     except Exception as e:
         user = User.objects.create_superuser(userEmail, userEmail, 'zariz001')
         user.save()
-  
+        fbUser.userID = user.id
+        fbUser.save()
     userAuth = django.contrib.auth.authenticate(username = fbUser.localUser, password = fbUser.localPassword)
     
     if userAuth is not None:
@@ -124,15 +138,44 @@ def profilePage(request):
 def occupationPage(request):
     locale.setlocale(locale.LC_ALL, '')
     sData = codecs.open('static/content/settings.json', encoding='utf-8').read()
-    #with open('static/content/settings.json') as f:
-    #    sData = f.read()
     data = ast.literal_eval(sData)
-    #data = ['aaa','bbb','ccc','ddd','eee','fff','ggg','hhh']
+    sPossibleFields = data['occupationFields']
+    possibleFields = [s.decode('utf-8') for s in sPossibleFields]
+    pickedFields = []
+    try:
+        worker = Workers.objects.get(localUser=request.user.username)
+        occupaitonList = ast.literal_eval(worker.occupationFieldListString)
+        pickedFields = [s for s in occupaitonList if s in possibleFields]
+       # if (len(pickedFields) != len(occupaitonList))
+       #     worker.occupationFieldListString = str(pickedFields)
+    except Exception as e:
+        pass
+
     return render(
         request,
         'OccupationPick.html',
         {
-             'fields' : data['occupationFields']
+             'fields' : possibleFields,
+             'picked' : pickedFields
              #'fields' : data
         }
     )
+
+def calander(request):
+    # try:
+    #     worker = Workers.objects.get(localUser=request.user.username)
+    # except Exception as e:
+    #     print("Error")
+    #     return JsonResponse({'error' : True})
+    busyEvents = BusyEvent.objects.filter(worker__localUser=request.user.username)
+    busyDates = [d.value_to_string() for d in busyEvents]
+    return render(
+        request,
+        'CalanderPick.html',
+        {
+            'busyDates' : busyDates
+        }
+    )
+
+
+

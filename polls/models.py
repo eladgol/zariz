@@ -14,20 +14,11 @@
 
 from django.db import models
 
-class Question(models.Model):
-    question_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField('date published')
-
-
-class Choice(models.Model):
-    question = models.ForeignKey(Question)
-    choice_text = models.CharField(max_length=200)
-    votes = models.IntegerField(default=0)
-
 class UserFirebaseDB(models.Model):
     fireBaseUser = models.CharField(max_length=200)
     localUser = models.CharField(max_length=200)
     localPassword = models.CharField(max_length=50)
+    userID = models.CharField(max_length=200)
 
 class Workers(models.Model):
     occupationFieldListString = models.CharField(max_length=2048)
@@ -35,3 +26,20 @@ class Workers(models.Model):
     lastName = models.CharField(max_length=200)
     portrait = models.ImageField( default = 'content/portraits/no-portrait.png')
     localUser = models.CharField(max_length=200)
+    lat = models.FloatField()
+    lng = models.FloatField()
+    radius = models.FloatField()
+    minWage = models.IntegerField()
+    userID = models.CharField(max_length=200)
+
+class BusyEvent(models.Model):
+    userToken = models.CharField(max_length=200)
+    day = models.DateField(u'Day of the event', help_text=u'Day of the event')
+    start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
+    end_time = models.TimeField(u'Final time', help_text=u'Final time')
+    notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
+    
+
+
+
+

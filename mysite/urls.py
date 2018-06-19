@@ -17,7 +17,7 @@ from django.contrib import admin
 
 import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin
-from polls.views import firebaseSuccess, occupationPage, updateOccupation
+from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, updateDates
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -41,6 +41,8 @@ urlpatterns = [
     url(r'^accounts/profile/', profilePage, name='profilePage'),
     url(r'^occupation', occupationPage, name='occupationPage'),
     url(r'^updateOccupation',updateOccupation, name='updateOccupation'),
+    url(r'^updateDates',updateDates, name='updateDates'),
+    url(r'^calander/',calander, name='calander'),
     url(r'^testlocallogin/', django.contrib.auth.views.login,
     {
         'template_name': 'testlocallogin.html',
@@ -51,4 +53,5 @@ urlpatterns = [
             'year': datetime.now().year,
         }
     }, name = 'testlocallogin'),
+
 ]

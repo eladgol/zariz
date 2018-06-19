@@ -46,11 +46,13 @@
 <label style="align-content: center">בחר תחומי עיסוק</label>
 <div class="grid-container grid-container--fill">
     {% for field in fields %} 
-        <div class="grid-element toggle-off">{{field}}</div>
+        <div class="grid-element" id={{forloop.counter0}}>{{field}}</div>
     {% endfor %}
 </div>
 <script>
     var listOfOccupations = [];
+
+
     $('.grid-element').on('click', function(e){
         e.preventDefault();
         $(this).toggleClass('toggle-on');
@@ -79,5 +81,11 @@
             }
         });
     });
+
+    {% for field in fields %} 
+    {% if field in picked %}
+    $('#{{forloop.counter0}}').click();
+    {% endif %}
+    {% endfor %}
 </script>
 {% endblock content %}
