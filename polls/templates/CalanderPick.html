@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+        {% load staticfiles %}  
+        {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'content/jsCalander/jsCalendar.css' %}">
+    <script type="text/javascript" src="{% static 'content/jsCalander/jsCalendar.js' %}"></script>
+</head>
+<!-- Buttons -->
+<!-- My calendar element -->
+<div id="my-calendar"></div>
+
+<!-- Create the calendar -->
+<script type="text/javascript">
+    // Get the element
+    var element = document.getElementById("my-calendar");
+    // Create the calendar
+    var myCalendar = jsCalendar.new(element);
+    //var myCalendar = jsCalendar.new(element,"1-1-2017");
+    // Get the buttons
+
+    var jsBusyDates = []
+
+    {% for busyDate in busyDates %}
+    jsBusyDates.push(busyDate);
+    {% endfor %}
+    
+    // Add events
+    myCalendar.onDateClick(function(event, date){
+        sDo = "Add";
+        if (jsBusyDates.indexOf(date) < 0) {
+            myCalendar.unselect(date);
+            sDo = "Remove";
+        } else {
+            jsBusyDates.push(date);
+            myCalendar.select(date);
+        }
+        inputA.value = date.toString();
+        $.ajax({
+            url: "{% url 'updateDates' %}",
+            method: 'POST',
+            data : {
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                'busyDate' : date,
+                'sDo'       : sDo
+            },
+            dataType: 'json',
+            success: function(data)
+            {updateDates
+                
+                console.log(jsBusyDates)            
+                console.log("success")
+            },
+            error: function(error_data){
+                console.log("error");
+                console.log(error_data)
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
