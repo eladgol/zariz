@@ -16,7 +16,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 import django.contrib.auth.views
-from polls.views import index, loginFirebase, profilePage, testlocallogin
+from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers
 from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, updateDates
 import polls.forms
 from datetime import datetime
@@ -53,5 +53,6 @@ urlpatterns = [
             'year': datetime.now().year,
         }
     }, name = 'testlocallogin'),
+    url(r'^ShowWorkers/', ShowWorkers, name='ShowWorkers')
 
 ]

@@ -24,15 +24,19 @@
 {% csrf_token %}
 <script type="text/javascript">
   // FirebaseUI config.
+  var userData;
   var uiConfig = {
     callbacks: {
       signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-         console.log("success1")
+        console.log("success1");
+        userData = authResult.user; 
+        userData.getIdToken().then(function(userToken) {
+          console.log(userData)
           $.ajax({
               url: "{% url 'firebaseSuccess' %}",
               method: 'GET',
               data : {csrfmiddlewaretoken: "{{ csrf_token }}",
-                'userEmail' : String(authResult.user.email)
+                'userToken' : String(userToken)
           //      'redirectUrl' :redirectUrl
               },
               dataType: 'json',
@@ -53,7 +57,10 @@
                   console.log(error_data)
               }
           });
-        return false;
+
+      });
+         
+      return false;
       },
       uiShown: function() {
         console.log("UI shown")

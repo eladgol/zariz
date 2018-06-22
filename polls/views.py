@@ -12,35 +12,59 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import unicode_literals
+
+########################################################################
+# this is required for firebase backend to work  -
+#  according to - https://stackoverflow.com/questions/9604799/can-python-requests-library-be-used-on-google-app-engine/28544823#28544823
+from requests_toolbelt.adapters import appengine
+appengine.monkeypatch()
+##################################################################
 import ast
 import codecs
 import locale
+import os
+
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from models import UserFirebaseDB, Workers, BusyEvent
 import django.contrib.auth
 import django.contrib.auth.views
 from django.contrib.auth.decorators import login_required
 import urllib2
-import os
 from django.template import loader
 from django.utils.translation import gettext as _
+from django.forms.models import model_to_dict
+
 from polls.forms import BootstrapAuthenticationForm
 from datetime import datetime
+from logic import *
+from models import UserFirebaseDB, Workers, BusyEvent
+
+from accessGoogleCloudStorage import *
+
+import firebase_admin
+from firebase_admin import credentials
+print("Initalizing firebase SDK")
+#toDo: handle fire base authenticatiom the proper way, using a session token
+cred = credentials.Certificate('zariz-204206-firebase-adminsdk-8qex8-1d92e2b93c.json')
+default_app = firebase_admin.initialize_app(cred)
+
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
     pass
 else:
     import ptvsd
 
+agcs = accessGoogleCloudStorage()
+
 def index(request):
     #ptvsd.break_into_debugger()
     a = _("test")
     print(a)
+    b = agcs.get()
+    filename = "/bucket/test.txt"
     return django.contrib.auth.views.login(request,
         template_name='loginGrid.html',
         authentication_form=BootstrapAuthenticationForm,
@@ -87,7 +111,7 @@ def updateOccupation(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
     # does user exist
     try:
-        worker = Workers.objects.get(localUser=request.user.username)
+        worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
         worker = Workers(localUser=request.user)
     worker.occupationFieldListString = str(occupaitonList)
@@ -96,43 +120,36 @@ def updateOccupation(request):
     return JsonResponse(payload)
 
 def firebaseSuccess(request):
-    userEmail = request.GET.get('userEmail', None)
-    print('{}'.format(userEmail))
-    try:
-        fbUser = UserFirebaseDB.objects.get(fireBaseUser=userEmail)
-    except:
-        fbUser = UserFirebaseDB(fireBaseUser=userEmail, localUser=userEmail, localPassword="zariz001", userID="NotSetYet")
-        fbUser.save()
-    try:
-        user = User.objects.get(username=fbUser.localUser)
-    except Exception as e:
-        user = User.objects.create_superuser(userEmail, userEmail, 'zariz001')
-        user.save()
-        fbUser.userID = user.id
-        fbUser.save()
-    userAuth = django.contrib.auth.authenticate(username = fbUser.localUser, password = fbUser.localPassword)
-    
-    if userAuth is not None:
-        if userAuth.is_active:
-            django.contrib.auth.login(request, userAuth)
-        else:
-            print('{} not active'.  format(userEmail))
-    else:
-        print('Authentication failed for {}'.format(userEmail))
+    userToken = request.GET.get('userToken', None)
+    payload = fbAuthenticate(userToken)
+    if not payload['success']:
+        return JsonResponse(payload)
 
-    # Check if the user exists if not create and log in
-    #template = loader.get_template('profilePage.html')
-    #context = {}
-    payload = {'success': True, 'redirectUrl' : 'accounts/profile/'}
-    
-    return JsonResponse(payload)
+    userEmail = payload['userEmail'] 
+    print('email - {}, token - {}'.format(userEmail, userToken)) 
+
+    fbUser = updateFireBaseDB(userEmail)
+
+    res = authenticateUser(request, fbUser.localUser, fbUser.localPassword) 
+    if res['success']:
+        payload2 = {'success': True, 'redirectUrl' : 'accounts/profile/'}
+    else:
+        payload2 = {'success': True, 'redirectUrl' : 'accounts/profile/'}
+
+    worker = getWorker(request.user.username)
+    print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+    downoladPhoto(payload['photoURL'], payload['photoFileName'], worker, agcs)
+
+    return JsonResponse(payload2)
     
 @login_required(login_url="/login/")
 def profilePage(request):
+    worker = getWorker(request.user.username)
+    dWorker = model_to_dict(worker)
     return render(
         request,
         'profilePage.html',
-        {}
+        dWorker
     )
 
 def occupationPage(request):
@@ -176,6 +193,13 @@ def calander(request):
             'busyDates' : busyDates
         }
     )
-
-
-
+def ShowWorkers(request):
+    workers = Workers.objects.all()
+    workerList = [w for w in workers]
+    return render(
+        request,
+        'ShowWorkers.html',
+        {
+            'workers' : workerList
+        }
+    )

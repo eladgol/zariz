@@ -13,24 +13,32 @@
 # limitations under the License.
 
 from django.db import models
+from django.contrib.auth.models import User
 
 class UserFirebaseDB(models.Model):
     fireBaseUser = models.CharField(max_length=200)
     localUser = models.CharField(max_length=200)
     localPassword = models.CharField(max_length=50)
-    userID = models.CharField(max_length=200)
+    userID = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
 
 class Workers(models.Model):
-    occupationFieldListString = models.CharField(max_length=2048)
-    firstName = models.CharField(max_length=200)
-    lastName = models.CharField(max_length=200)
-    portrait = models.ImageField( default = 'content/portraits/no-portrait.png')
-    localUser = models.CharField(max_length=200)
-    lat = models.FloatField()
-    lng = models.FloatField()
-    radius = models.FloatField()
-    minWage = models.IntegerField()
-    userID = models.CharField(max_length=200)
+    occupationFieldListString = models.CharField(max_length=2048, default = "")
+    firstName = models.CharField(max_length=200, default= "")
+    lastName = models.CharField(max_length=200, default = "")
+    photoAGCSPath = models.CharField(max_length=200, default = "")
+    lat = models.FloatField(default=0.0)
+    lng = models.FloatField(default=0.0)
+    radius = models.FloatField(default=0.1)
+    minWage = models.FloatField(default=29.12)
+    userID = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
 
 class BusyEvent(models.Model):
     userToken = models.CharField(max_length=200)
@@ -38,7 +46,8 @@ class BusyEvent(models.Model):
     start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     end_time = models.TimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
-    
+    userID = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,)
+
 
 
 
