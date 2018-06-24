@@ -8,11 +8,15 @@
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'content/bootstrap.min.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'content/site.css' %}" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="{% static 'scripts/modernizr-2.6.2.js' %}"></script>
     <link rel="icon" 
       type="image/bmp" 
       href="{% static 'content/favicon.ico' %}">
 </head>
+
 <style>
     .bg {
         background-image: url(static/content/Poel2.jpg) no-repeat center center fixed;
@@ -39,7 +43,7 @@
       
 </style>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navbar-inverse navbar-fixed-top" style="height:5vh;">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">

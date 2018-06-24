@@ -17,8 +17,8 @@ from django.contrib import admin
 
 import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers
-from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, updateDates
-from polls.views import demoForm, demoForm2
+from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, updateDates, updateInputForm
+from polls.views import demoForm, demoForm2, carousel
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^accounts/profile/', profilePage, name='profilePage'),
     url(r'^occupation', occupationPage, name='occupationPage'),
     url(r'^updateOccupation',updateOccupation, name='updateOccupation'),
+    url(r'^updateInputForm', updateInputForm, name='updateInputForm'),
     url(r'^updateDates',updateDates, name='updateDates'),
     url(r'^calander/',calander, name='calander'),
     url(r'^testlocallogin/', django.contrib.auth.views.login,
@@ -56,6 +57,6 @@ urlpatterns = [
     }, name = 'testlocallogin'),
     url(r'^ShowWorkers/', ShowWorkers, name='ShowWorkers'),
     url(r'^demoForm/', demoForm, name='demoForm'),
-    url(r'^demoForm2/', demoForm2, name='demoForm2')
-
+    url(r'^demoForm2/', demoForm2, name='demoForm2'),
+    url(r'^carousel/', carousel, name='carousel')
 ]

@@ -97,7 +97,7 @@ def updateDates(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
     # does user exist
     try:
-        worker = Workers.objects.get(localUser=request.user.username)
+        worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
         print("Error")
         return JsonResponse({'error' : True})
@@ -105,7 +105,20 @@ def updateDates(request):
     
     payload = {'success': True}
     return JsonResponse(payload)
-
+def updateInputForm(request):
+    name = request.POST.get('name', None)
+    value = request.POST.get('value', None)
+    try:
+        worker = Workers.objects.get(userID=request.user.id)
+    except Exception as e:
+        worker = Workers(localUser=request.user)
+    if 'firstName' in name:
+        worker.firstName = value
+    elif 'lastName' in name:
+        worker.lastName = value
+    worker.save()
+    payload = {'success': True}
+    return JsonResponse(payload)
 
 def updateOccupation(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
@@ -144,15 +157,32 @@ def firebaseSuccess(request):
     
 @login_required(login_url="/login/")
 def profilePage(request):
+    # worker = getWorker(request.user.username)
+    # dWorker = model_to_dict(worker)
+    # return render(
+    #     request,
+    #     'demoForm2.html',
+    #     dWorker
+    # )
+    return carousel(request)
+@login_required(login_url="/carousel/")
+def carousel(request):
+
     worker = getWorker(request.user.username)
-    dWorker = model_to_dict(worker)
+    d = model_to_dict(worker)
+
+    possibleFields, pickedFields = getOccupationDetails(request)
+    d['fields'] = possibleFields
+    d['picked'] = pickedFields
+
+
     return render(
         request,
-        'demoForm2.html',
-        dWorker
+        'carousel.html',
+        d
     )
-
-def occupationPage(request):
+    
+def getOccupationDetails(request):
     locale.setlocale(locale.LC_ALL, '')
     sData = codecs.open('static/content/settings.json', encoding='utf-8').read()
     data = ast.literal_eval(sData)
@@ -160,14 +190,18 @@ def occupationPage(request):
     possibleFields = [s.decode('utf-8') for s in sPossibleFields]
     pickedFields = []
     try:
-        worker = Workers.objects.get(localUser=request.user.username)
+        worker = Workers.objects.get(userID=request.user.id)
         occupaitonList = ast.literal_eval(worker.occupationFieldListString)
         pickedFields = [s for s in occupaitonList if s in possibleFields]
-       # if (len(pickedFields) != len(occupaitonList))
-       #     worker.occupationFieldListString = str(pickedFields)
     except Exception as e:
         pass
+    return possibleFields, pickedFields
 
+def occupationPage(request):
+    possibleFields, pickedFields = getOccupationDetails(request)
+    # if (len(pickedFields) != len(occupaitonList))
+    #     worker.occupationFieldListString = str(pickedFields)
+   
     return render(
         request,
         'OccupationPick.html',
@@ -184,7 +218,7 @@ def calander(request):
     # except Exception as e:
     #     print("Error")
     #     return JsonResponse({'error' : True})
-    busyEvents = BusyEvent.objects.filter(worker__localUser=request.user.username)
+    busyEvents = BusyEvent.objects.filter(worker__userid=request.user.id)
     busyDates = [d.value_to_string() for d in busyEvents]
     return render(
         request,
