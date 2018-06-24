@@ -148,7 +148,7 @@ def profilePage(request):
     dWorker = model_to_dict(worker)
     return render(
         request,
-        'profilePage.html',
+        'demoForm2.html',
         dWorker
     )
 
@@ -202,4 +202,16 @@ def ShowWorkers(request):
         {
             'workers' : workerList
         }
+    )
+def demoForm(request):
+    return render(
+        request,
+        'demoForm.html',
+        {}
+    )
+def demoForm2(request):
+    return render(
+        request,
+        'demoForm2.html',
+        {}
     )

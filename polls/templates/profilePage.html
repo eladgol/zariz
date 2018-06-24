@@ -4,10 +4,16 @@
 {% load staticfiles %}
 {% load static %}
 {% if user.is_authenticated %}
-<label>Hello {{ user.username }}!</label>
+<div style='display: block;margin-left: auto;margin-right: auto;width:100vw;height:15vh;background-color:#420217;position:relative'>
+<img src={{photoAGCSPath}} alt="profile image" style='height:10vh;display: block;position: absolute;top: 50%;left:50%;transform:translate(-50%, -50%);margin-left: auto;margin-right: auto;border-radius: 50%;'>
+</div>
 {% else %}
 <label>No User</label>
+    
 {% endif %}
+<div style="display: block;margin-left: auto;margin-right: auto;border-style:groove; border-color: #420217;">
+        {% block content2 %}{% endblock %}
+</div>
 {% endblock %}
 
 
