@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <title>Hoopo-Locate</title>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+      {% load staticfiles %}
+      {% load static %}
+      <script src="{% static 'hoopoWebServer/scripts/bootstrap.js' %}"></script>
+      <script src="{% static 'hoopoWebServer/scripts/moment.min.js' %}"></script>
+      <script src="{% static 'hoopoWebServer/scripts/moment-with-locales.js' %}"></script>
+      <script src="{% static 'hoopoWebServer/scripts/bootstrap-datetimepicker.min.js' %}"></script>
+      <link rel="stylesheet" href="{% static 'hoopoWebServer/admin/css/bootstrap.min.css' %}">
+      <link rel="stylesheet" href="{% static 'hoopoWebServer/admin/css/bootstrap-datetimepicker.min.css' %}">
+      <style>
+          
+          /* EQCSS Required - http://elementqueries.com for info */
+
+/* Responsive Table Reset */
+[data-table] {
+    font-size: 12pt;
+    width: 100%;
+  }
+  @element [data-table] and (max-width: 500px) {
+    $this,
+    $this caption,
+    $this thead,
+    $this tbody,
+    $this tfoot,
+    $this tr,
+    $this th,
+    $this td {
+      display: block;
+      width: 100%;
+    }
+  }
+  @element [data-table] and (min-width: 500px) {
+    $this { display: table; width: 100%; }
+    $this caption { display: table-caption; width: auto; }
+    $this thead { display: table-header-group; width: auto; }
+    $this tbody { display: table-row-group; width: auto; }
+    $this tfoot { display: table-footer-group; width: auto; }
+    $this tr { display: table-row; width: auto; }
+    $this th,
+    $this td { display: table-cell; width: auto; }
+  }
+  
+  /* Default Table Theme */
+  @element [data-table] {
+    $this {
+      font-family: 'Source Sans Pro', sans-serif;
+      margin: 1em 0;
+      color: #333;
+      border-collapse: collapse;
+    }
+    $this thead th,
+    $this tfoot th {
+      color: #777;
+      background: rgba(0,0,0,.1);
+    }
+    $this caption {
+      padding: .5em;
+    }
+    $this th,
+    $this td {
+      padding: .5em;
+      background: white;
+      border: 1px solid #aaa;
+    }
+    $this tbody tr:nth-of-type(even) {
+      background: rgba(0,0,0,.05);
+    }
+  }
+  
+  /* Grid Table Layout */
+  @element [data-table^=col-] and (max-width: 500px) {
+    $this thead {
+      display: none;
+    }
+    $this tr:after {
+      content: '';
+      display: block;
+      clear: both;
+    }
+    $this[data-table$=-one] td { width: 100%; }
+    $this[data-table$=-two] td { width: 50%; }
+    $this[data-table$=-three] td { width: 33.33%; }
+    $this[data-table$=-four] td { width: 25%; }
+    $this[data-table$=-five] td {width: 20%; }
+    $this[data-table$=-six] td { width: 16.66%; }
+    $this td {
+      float: left;
+      line-height: 1.4;
+      padding: .5em 0;
+      text-align: center;
+      position: relative;
+    }
+    $this td:nth-of-type(n+2) {
+      padding-bottom: 17.5pt;
+    }
+    $this td:after {
+      content: attr(data-heading);
+      display: block;
+      width: 100%;
+      position: absolute;
+      bottom: 5pt;
+      left: 0;
+      font-size: 10pt;
+      line-height: 1.2;
+      color: #999;
+    }
+    $this td:first-of-type:after {
+      display: none;
+    }
+    $this td:nth-of-type(n+2) {
+      border-top: none;
+    }
+    $this[data-table$=-two] td:nth-of-type(n+2):nth-of-type(odd),
+    $this[data-table$=-three] td:nth-of-type(n+2):nth-of-type(3n),
+    $this[data-table$=-three] td:nth-of-type(n+2):nth-of-type(3n+1),
+    $this[data-table$=-four] td:nth-of-type(n+2),
+    $this[data-table$=-five] td:nth-of-type(n+2),
+    $this[data-table$=-six] td:nth-of-type(n+2) {
+      border-left-color: transparent;
+    }
+    $this[data-table$=-four] td:nth-of-type(4n+2),
+    $this[data-table$=-five] td:nth-of-type(5n+2),
+    $this[data-table$=-six] td:nth-of-type(6n+2) {
+      border-left-color: #aaa;
+    }
+    $this td:first-of-type {
+      color: #777;
+      background: rgba(0,0,0,.1);
+      font-weight: 600;
+      width: 100%;
+    }
+  }
+      </style>
+    </head>
+    <body>
+        <div style= "color: #337ab7;">
+            <form action="ExportDB" method="post" style="display:inline-block;">
+                {% csrf_token %}
+                <input type="submit" value="ExportDB">
+            </form>
+            <form action="RemoveDuplicateDB" method="post" style="display:inline-block;">
+                    {% csrf_token %}
+                    <input type="submit" value="RemoveDuplicateDB">
+            </form>
+            <form action="ClearDB" method="post" style="display:inline-block;" name ="ClearDBForm">
+                {% csrf_token %}
+            </form>
+            <button data-toggle="modal" data-target="#confirm-delete">
+              ClearDB
+          </button>
+            <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  Are you sure you want to clear the entire database?
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                  <a class="btn btn-danger btn-ok" onclick="ClearDB()">Delete</a>
+              </div>
+          </div>
+      </div>
+
+                <script>
+                function ClearDB() {
+                    ClearDBForm.submit();
+                }
+            </script>
+        </div>
+
+        <table data-table="col-six">
+                <caption>Zariz workers Database</caption>
+                <thead>
+                  <tr>
+                    <th>firstName</th>
+                    <th>lastName</th>
+                    <th>localUser</th>
+                    <th>lat</th>
+                    <th>lng</th>
+                    <th>radius</th>
+                    <th>minWage</th>
+                    <th>userID</th>
+                    <th>photoAGCSPath</th>
+                    <th>occupationFieldListString</th>
+                    
+                  </tr>
+                </thead>
+                <tbody>
+                {% for worker in workers %}
+                  <tr>
+                        
+                        <td data-heading="firstName"                >{{worker.firstName}} </td>
+                        <td data-heading="lastName"                 >{{worker.lastName}} </td>
+                        <td data-heading="localUser"                >{{worker.localUser}} </td>
+                        <td data-heading="lat"                      >{{worker.lat}} </td>
+                        <td data-heading="lng"                      >{{worker.lng}} </td>
+                        <td data-heading="radius"                   >{{worker.radius}} </td>
+                        <td data-heading="minWage"                  >{{worker.minWage}} </td>
+                        <td data-heading="userID"                   >{{worker.userID}} </td>
+                        <td data-heading="photoAGCSPath"            >{{worker.photoAGCSPath}}</td>
+                        <td data-heading="occupationFieldListString">{{worker.occupationFieldListString}} </td>
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+          
+    </body>
+</html>

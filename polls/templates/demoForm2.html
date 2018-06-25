@@ -1,0 +1,213 @@
+{% block content2 %}
+{% load staticfiles %}
+{% load static %}
+
+<!-- <style>
+                body {
+                margin: 40px;
+                }
+            
+                .sidebar {
+                grid-area: sidebar;
+                background-color:#f6aa1c;
+                }           
+                .content {
+                grid-area: content;
+                background-color:#A63C06
+                }
+            
+                .header {
+                grid-area: header;
+                background-color: #420217;
+                }
+                .footer {
+                grid-area: footer;
+                background-color:#220901;   
+                }
+            
+                .wrapper {
+                        display: grid;
+                        grid-gap: 5;    
+                        grid-template-areas:
+                        "header  header  header header header"
+                        "sidebar content content content sidebar"
+                        "sidebar content content content sidebar"
+                        "sidebar content content content sidebar"
+                        "sidebar content content content sidebar"
+                        "footer  footer  footer footer footer";
+                        grid-template-columns: 20vw 20vw 20vw 20vw 20vw;
+                        background-color: #fff;
+                        opacity: 0.8;
+                    }
+            
+            
+</style> -->
+<!--     <style>
+            * {
+                box-sizing: border-box;
+              }
+              
+              html {
+                font: 14px/1.4 Sans-Serif;
+              }
+              
+              form {
+                width: 320px;
+                float: center;
+                margin-left: auto;
+                margin-right: auto;
+                text-align: center;
+              }
+              form > div {
+                position: relative;
+                overflow: hidden;
+                margin-right: auto;
+                margin-left: auto;
+                
+            }
+              form input, form textarea {
+                width: 100%;
+                border: 2px solid #A63C06;
+                position: relative;
+                top: 0;
+                left: 0;
+                z-index: 1;
+                padding: 8px 12px;
+                outline: 0;
+              }
+              form input:valid, form textarea:valid {
+                background: white;
+              }
+              form input:focus, form textarea:focus {
+                border-color: #f6aa1c;
+              }
+              form input:focus + label, form textarea:focus + label {
+                
+                color :#5d1cf6;
+                font-size: 70%;
+                padding: 1px 6px;
+                z-index: 2;
+              }
+              form label {
+                transition: background 0.2s, color 0.2s, top 0.2s, bottom 0.2s, right 0.2s, left 0.2s;
+                position: absolute;
+                color: #420217;
+                padding: 6px 6px;
+                display: inline-block;
+                text-align: center;
+              }
+              form textarea {
+                display: block;
+                resize: vertical;
+                display: inline-block;
+               
+              }
+              
+              form.go-bottom input, form.go-bottom textarea {
+                padding: 12px 12px 12px 12px;
+                color :#000000;
+                background-color: #faffbd;
+                border-color:#cccccc
+              }
+              form.go-bottom label {
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+              }
+              form.go-bottom input:focus, form.go-bottom textarea:focus {
+                padding: 4px 6px 20px 6px;
+              }
+              form.go-bottom input:focus + label, form.go-bottom textarea:focus + label {
+                top: 100%;
+                margin-top: -16px;
+              }
+              
+                           
+    </style>
+ -->
+ <style>    
+    form > div {
+      display: block;
+      margin:0 auto;   
+    }
+    form input, form textarea {
+      padding: 2vh 2vw;
+      color :#000000;
+      background-color: #faffbd;
+      border-color:#cccccc
+    }
+    form label {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+    }
+    form input:focus + label, form.go-bottom textarea:focus + label {
+      top: 100%;
+      margin-top: -16px;
+    }
+    
+ </style>
+<!--form style="margin:0 auto;width:40vw" class="go-bottom"-->
+<form style="float:center;margin:0 auto;text-align:center;background-color:#f6aa1c;">
+    
+    <div  style="float:center;">
+      <img src={{photoAGCSPath}} alt="profile image" style='height:10vh;margin-left: auto;margin-right: auto;border-radius: 50%;'>
+    </div>   
+    <div  style="float:center;">
+        <label>פרטים</label>
+    </div>
+    <div style="float:center">
+      <div  style="background-color:#eee">
+          <label for="firstName" style="float:right;">שם פרטי</label>
+          <input id="firstName" name="firstName" type="text" style="width:30em;max-width:50em;" value="{{firstName}}" required>
+      </div>
+
+      <div  style="background-color:#eee"  >
+          <label for="lastName">שם משפחה</label>
+          <input id="lastName" name="lastName" type="text" style="width:30em;max-width:50em;" value="{{lastName}}" required>
+      </div>
+    </div>  
+    {% comment %} <div style="float:center;background-color:#eee;">
+      <label for="phone">טלפון</label>
+      <input  id="phone" name="phone" type="tel" required>
+    </div> {% endcomment %}
+    <div style="float:center;background-color:#eee;">
+      <label for="wage">שכר מינימלי לשעה</label>
+      <input  id="wage" name="wage" type="number" value="{{minWage}}" required>
+    </div>
+    <div style="float:center;background-color:#eee;">
+        <label for="details">פרטים נוספים</label>
+        <textarea id="details" name="details" required></textarea>
+    </div>
+    <script>
+        $( "input" ).change(function() {
+          postChanges(this.name, this.value)
+        });
+
+        function postChanges(name, value) {
+          $.ajax({
+            url: "{% url 'updateInputForm' %}",
+            method: 'POST',
+            data : {
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                'name' : name,
+                'value' : value
+            },
+            dataType: 'json',
+            success: function(data){
+                console.log("success")
+            },
+            error: function(error_data){
+                console.log("error");
+                console.log(error_data)
+            }
+        });
+        };
+    </script>
+  </form>
+  
+  {% endblock %}

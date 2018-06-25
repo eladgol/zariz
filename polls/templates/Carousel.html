@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+
+    <style>
+            .carousel-indicators li {
+                bottom:-5vh;
+                color:#A63C06;
+                border-color:#A63C06 ;
+            }
+            .carousel-indicators .active {
+                bottom:-5vh;
+                background-color:#A63C06;
+                border-color:#A63C06;
+                color:#A63C06;
+            }
+            .carousel-inner {
+                height:80vh;
+                max-width:99vw;
+                box-sizing: border-box;
+            }
+            ol.carousel-indicators {
+              position: inherit;
+              text-align: center;
+              list-style-position: inside;
+              margin: 0 auto;
+              padding: 0;
+              left: 0
+            }
+
+    </style>
+<div class="container" id="container" name="container"> 
+  <div id="myCarousel" class="carousel slide" data-interval="false" data-ride="carousel">
+    <!-- Indicators -->
+
+    <!-- Wrapper for slides -->
+    <div class="carousel-inner">
+        <div class="item active">
+            {% include "demoForm2.html" %}
+        </div>
+
+        <div class="item">
+            {% include "OccupationPick.html" %}
+        </div>
+
+    </div>
+    <div>
+            <ol class="carousel-indicators">
+              <li data-target="#myCarousel" data-slide-to="0" class="active" ></li>
+              <li data-target="#myCarousel" data-slide-to="1"></li>
+            </ol>
+        </div>
+
+        <script>
+                document.addEventListener("touchstart", startTouch, false);
+                document.addEventListener("touchmove", moveTouch, false);
+                document.addEventListener("onmousedown", startPointer, false);
+                document.addEventListener("onmouseup", moveTouch, false);
+                document.addEventListener("pointerdown", startPointer, false);
+                document.addEventListener("pointerup", movePointer, false);
+                // Swipe Up / Down / Left / Right
+                var initialX = null;
+                var initialY = null;
+                 
+                function startTouch(e) {
+                  initialX = e.touches[0].clientX;
+                  initialY = e.touches[0].clientY;
+                };
+                function startPointer(e) {
+                    initialX = e.clientX;
+                    initialY = e.clientY;
+                  };
+                 
+                function moveTouch(e) {
+                  var currentX = e.touches[0].clientX;
+                  var currentY = e.touches[0].clientY;
+                  moveInternal(currentX, currentY);
+                  e.preventDefault();
+                };
+                function movePointer(e) {
+                    var currentX = e.clientX;
+                    var currentY = e.clientY;
+                    moveInternal(currentX, currentY);
+                    e.preventDefault();
+                  };
+                function moveInternal(currentX, currentY) {
+                  if (initialX === null) {
+                    return;
+                  }
+                 
+                  if (initialY === null) {
+                    return;
+                  }
+                 
+                  
+                 
+                  var diffX = initialX - currentX;
+                  var diffY = initialY - currentY;
+                 
+                  if (Math.abs(diffX) > Math.abs(diffY)) {
+                    // sliding horizontally
+                    if (diffX > 0) {
+                      // swiped left
+                      console.log("swiped left");
+                      $("#myCarousel").carousel("prev");
+                    } else {
+                      // swiped right
+                      console.log("swiped right");
+                      $("#myCarousel").carousel("next");
+                    }  
+                    initialX = null;
+                    initialY = null;
+              
+                    }
+                };
+                   
+                  
+              
+        </script>
+        
+</div>
+
+
+{% endblock %}
