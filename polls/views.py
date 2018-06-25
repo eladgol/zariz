@@ -184,7 +184,7 @@ def carousel(request):
     
 def getOccupationDetails(request):
     locale.setlocale(locale.LC_ALL, '')
-    sData = codecs.open('static/content/settings.json', encoding='utf-8').read()
+    sData = codecs.open(os.path.dirname(__file__) + '/../'+ 'static/content/zarizSettings.json', encoding='utf-8').read()
     data = ast.literal_eval(sData)
     sPossibleFields = data['occupationFields']
     possibleFields = [s.decode('utf-8') for s in sPossibleFields]
