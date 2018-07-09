@@ -41,7 +41,6 @@ class Workers(models.Model):
     )
 
 class BusyEvent(models.Model):
-    userToken = models.CharField(max_length=200)
     day = models.DateField(u'Day of the event', help_text=u'Day of the event')
     start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     end_time = models.TimeField(u'Final time', help_text=u'Final time')

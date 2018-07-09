@@ -48,6 +48,8 @@ from accessGoogleCloudStorage import *
 
 import firebase_admin
 from firebase_admin import credentials
+from ZarizSettings import *
+
 print("Initalizing firebase SDK")
 #toDo: handle fire base authenticatiom the proper way, using a session token
 cred = credentials.Certificate('zariz-204206-firebase-adminsdk-8qex8-1d92e2b93c.json')
@@ -58,13 +60,12 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
 else:
     import ptvsd
 
-agcs = accessGoogleCloudStorage()
 
 def index(request):
     #ptvsd.break_into_debugger()
     a = _("test")
     print(a)
-    b = agcs.get()
+    b = agcs_get()
     filename = "/bucket/test.txt"
     return django.contrib.auth.views.login(request,
         template_name='loginGrid.html',
@@ -132,7 +133,7 @@ def updateInputForm(request):
         buff = base64.b64decode(base64Val)
 
         sFileName = 'profile_pic_{}_{}_.{}'.format(request.user.username, time.time(), file_ext)
-        worker.photoAGCSPath = uploadBlob(sFileName, buff, header64, agcs)
+        worker.photoAGCSPath = uploadBlob(sFileName, buff, header64)
 
     elif 'firstName' in name:
         worker.firstName = value
@@ -175,8 +176,10 @@ def firebaseSuccess(request):
         payload2 = {'success': True, 'redirectUrl' : 'accounts/profile/'}
 
     worker = getWorker(request.user.username)
-    print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
-    downoladPhoto(payload['photoURL'], payload['photoFileName'], worker, agcs)
+    if worker.photoAGCSPath is '':
+        print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+        downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
+
 
     return JsonResponse(payload2)
     
@@ -209,9 +212,9 @@ def carousel(request):
     
 def getOccupationDetails(request):
     locale.setlocale(locale.LC_ALL, '')
-    sData = codecs.open(os.path.dirname(__file__) + '/../'+ 'static/content/zarizSettings.json', encoding='utf-8').read()
-    data = ast.literal_eval(sData)
-    sPossibleFields = data['occupationFields']
+    #sData = codecs.open(os.path.dirname(__file__) + '/../'+ 'static/content/zarizSettings.json', encoding='utf-8').read()
+    #data = ast.literal_eval(sData)
+    sPossibleFields = ZarizSettingsDict['occupationFields']
     possibleFields = [s.decode('utf-8') for s in sPossibleFields]
     pickedFields = []
     try:

@@ -96,6 +96,8 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # MySQLdb. This is a convenience feature for developers who cannot install
 # MySQLdb locally; when running in production on Google App Engine Standard
 # Environment, MySQLdb will be used.
+import sys
+sys.path.append(os.getcwd() + os.sep + 'lib')
 try:
     import MySQLdb  # noqa: F401
 except ImportError:

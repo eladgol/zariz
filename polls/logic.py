@@ -9,7 +9,7 @@ import urllib
 import os
 from django.core.files import File
 from imageDownload import downloadImageToBuff
-
+from accessGoogleCloudStorage import *
 def fbAuthenticate(userToken):
     try:
         decodedToken = auth.verify_id_token(userToken)
@@ -38,17 +38,18 @@ def getPhotoFileName(url, username, provider_id):
     sFileName = '{}_{}_{}.{}'.format(username, provider_id, time.time(), file_ext)
     return sFileName
 
-def downoladPhoto(url, sFileName, worker, agcs):
+def downoladPhotoAndSaveToWorker(url, sFileName, worker):
     try:
         buff, contentType, ContentLength = downloadImageToBuff(url)
-        uploadBlob(sFileName, buff, contentType)
+        worker.photoAGCSPath = uploadBlob(sFileName, buff, contentType)
+        worker.save()
     except Exception as e:
         print(str(e))
     return sFileName
 
-def uploadBlob(sFileName, buff, contentType, agcs):
+def uploadBlob(sFileName, buff, contentType):
     try:
-        url = agcs.upload_blob(sFileName, buff, contentType)
+        url = upload_blob(sFileName, buff, contentType)
     except Exception as e:
         print(str(e))
     return url
