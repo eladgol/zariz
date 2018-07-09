@@ -1,0 +1,104 @@
+{% block content2 %}
+{% load staticfiles %}
+{% load static %}
+
+ <style>    
+    form > div {
+      display: block;
+      margin:0 auto;   
+    }
+    form input, form textarea {
+      padding: 2vh 2vw;
+      color :#000000;
+      background-color: #faffbd;
+      border-color:#cccccc
+    }
+    form label {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+    }
+    form input:focus + label, form.go-bottom textarea:focus + label {
+      top: 100%;
+      margin-top: -16px;
+    }
+    
+ </style>
+<!--form style="margin:0 auto;width:40vw" class="go-bottom"-->
+<form style="float:center;margin:0 auto;text-align:center;background-color:#f6aa1c;">
+    
+    <div  style="float:center;">
+      <img src={{photoAGCSPath}} id="profileImage" class="triggerFileInput" alt="profile image" style='height:10vh;margin-left: auto;margin-right: auto;border-radius: 50%;'>
+      <input type="file" id="my_file" style="display: none;" accept="image/*"/>
+      <script>
+        $("img").click(function() {
+          $("input[id='my_file']").click();
+      }); 
+      $("#my_file").on('change', function () {
+        console.log('FOO!');
+        var fReader = new FileReader();
+        fReader.readAsDataURL(this.files[0]);
+        fReader.onloadend = function(event){
+          postChanges("photoAGCSPath", event.target.result);
+        }
+        
+    });
+      </script>
+    </div>   
+    <div  style="float:center;">
+        <label>פרטים</label>
+    </div>
+    <div style="float:center">
+      <div  style="background-color:#eee">
+          <label for="firstName" style="float:right;">שם פרטי</label>
+          <input id="firstName" class="updateChanges" name="firstName" type="text" style="width:30em;max-width:50em;" value="{{firstName}}" required>
+      </div>
+
+      <div  style="background-color:#eee"  >
+          <label for="lastName">שם משפחה</label>
+          <input id="lastName" class="updateChanges" name="lastName" type="text" style="width:30em;max-width:50em;" value="{{lastName}}" required>
+      </div>
+    </div>  
+    {% comment %} <div style="float:center;background-color:#eee;">
+      <label for="phone">טלפון</label>
+      <input  id="phone" name="phone" type="tel" required>
+    </div> {% endcomment %}
+    <div style="float:center;background-color:#eee;">
+      <label for="wage">שכר מינימלי לשעה</label>
+      <input  id="wage" class="updateChanges" name="wage" type="number" value="{{minWage}}" required>
+    </div>
+    <div style="float:center;background-color:#eee;">
+        <label for="details">פרטים נוספים</label>
+        <textarea id="details" class="updateChanges" name="details" required></textarea>
+    </div>
+    <script>
+        $( ".updateChanges" ).change(function() {
+          postChanges(this.name, this.value)
+        });
+
+        function postChanges(name, value) {
+          $.ajax({
+            url: "{% url 'updateInputForm' %}",
+            method: 'POST',
+            data : {
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                'name' : name,
+                'value' : value
+            },
+            dataType: 'json',
+            success: function(data){
+                console.log("success")
+                $('#profileImage').attr('src', data.photoAGCSPath);
+            },
+            error: function(error_data){
+                console.log("error");
+                console.log(error_data)
+            }
+        });
+        };
+    </script>
+  </form>
+  
+  {% endblock %}

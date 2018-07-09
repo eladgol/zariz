@@ -41,13 +41,18 @@ def getPhotoFileName(url, username, provider_id):
 def downoladPhoto(url, sFileName, worker, agcs):
     try:
         buff, contentType, ContentLength = downloadImageToBuff(url)
-        fileName = agcs.upload_blob(sFileName, buff, contentType)
-        worker.photoAGCSPath = fileName
-        worker.save()
+        uploadBlob(sFileName, buff, contentType)
     except Exception as e:
         print(str(e))
     return sFileName
 
+def uploadBlob(sFileName, buff, contentType, agcs):
+    try:
+        url = agcs.upload_blob(sFileName, buff, contentType)
+    except Exception as e:
+        print(str(e))
+    return url
+    
 def updateFireBaseDB(userEmail):
     try:
         fbUser = UserFirebaseDB.objects.get(fireBaseUser=userEmail)

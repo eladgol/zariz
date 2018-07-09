@@ -24,6 +24,7 @@ import ast
 import codecs
 import locale
 import os
+import base64
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
@@ -108,16 +109,40 @@ def updateDates(request):
 def updateInputForm(request):
     name = request.POST.get('name', None)
     value = request.POST.get('value', None)
+
     try:
         worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
-        worker = Workers(localUser=request.user)
-    if 'firstName' in name:
+        worker = Workers(userID=request.user.id)
+
+    if 'photoAGCSPath' in name:
+        splitVal = value.split(',')
+        base64Val = splitVal[1]
+        header64 = splitVal[0]
+        file_ext = 'unknown'
+        if 'jpeg' in header64:
+            file_ext = 'jpeg'
+        elif 'gif' in header64:
+            file_ext = 'gif'
+        elif 'png' in header64:
+            file_ext = 'png'
+        else:
+            file_ext = header64[len(u'data:image/'):]
+
+        buff = base64.b64decode(base64Val)
+
+        sFileName = 'profile_pic_{}_{}_.{}'.format(request.user.username, time.time(), file_ext)
+        worker.photoAGCSPath = uploadBlob(sFileName, buff, header64, agcs)
+
+    elif 'firstName' in name:
         worker.firstName = value
     elif 'lastName' in name:
         worker.lastName = value
+    elif 'wage' in name:
+        worker.minWage = float(name)
     worker.save()
-    payload = {'success': True}
+    payload = {'success': True, 'firstName' : worker.firstName,
+     'lastName' : worker.lastName, 'wage' : worker.minWage, 'photoAGCSPath' : worker.photoAGCSPath}
     return JsonResponse(payload)
 
 def updateOccupation(request):
@@ -126,7 +151,7 @@ def updateOccupation(request):
     try:
         worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
-        worker = Workers(localUser=request.user)
+        worker = Workers(userID=request.user.id)
     worker.occupationFieldListString = str(occupaitonList)
     worker.save()
     payload = {'success': True}
