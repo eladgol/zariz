@@ -1,0 +1,3 @@
+gcloud auth login --no-launch-browser
+
+./cloud_sql_proxy -instances=zariz-204206:europe-west4:zariz-sql4=tcp:3306

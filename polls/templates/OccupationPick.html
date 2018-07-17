@@ -2,7 +2,7 @@
 {% load staticfiles %}
     
 {% load static %}
-<html xmlns="http://www.w3.org/1999/xhtml" lang="he" xml:lang="he" dir="rtl">
+<!-- html xmlns="http://www.w3.org/1999/xhtml" lang="he" xml:lang="he" dir="rtl"> -->
 <script src="{% static 'scripts/jquery-1.10.2.js' %}"></script>
 <script src="{% static 'scripts/bootstrap.js' %}"></script>
 <script src="{% static 'scripts/respond.js' %}"></script>
@@ -42,7 +42,7 @@
 </style>
 {% block content %}
 
-<label style="align-content: center">בחר תחומי עיסוק</label>
+<center style="align-content: center">בחר תחומי עיסוק</center>
 <div class="grid-container grid-container--fill">
     {% for field in fields %} 
         <div class="grid-element" id={{forloop.counter0}}>{{field}}</div>

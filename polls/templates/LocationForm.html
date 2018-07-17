@@ -1,0 +1,357 @@
+
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    {% load staticfiles %}  
+    {% load static %}
+    <script src="{% static 'scripts/jquery-1.10.2.js' %}"></script>
+    <title>Places Searchbox</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #description {
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+      }
+
+      #infowindow-content .title {
+        font-weight: bold;
+      }
+
+      #infowindow-content {
+        display: none;
+      }
+
+      #map #infowindow-content {
+        display: inline;
+      }
+
+      .pac-card {
+        margin: 10px 10px 0 0;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        background-color: #fff;
+        font-family: Roboto;
+      }
+
+      #pac-container {
+        padding-bottom: 12px;
+        margin-right: 12px;
+      }
+
+      .pac-controls {
+        display: inline-block;
+        padding: 5px 11px;
+      }
+
+      .pac-controls label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+      }
+
+      #pac-input {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 400px;
+      }
+
+      #pac-input:focus {
+        border-color: #4d90fe;
+      }
+
+      #title {
+        color: #fff;
+        background-color: #4d90fe;
+        font-size: 25px;
+        font-weight: 500;
+        padding: 6px 12px;
+      }
+      #target {
+        width: 345px;
+      }
+    </style>
+  </head>
+  <body style="text-align: center">
+      <div  style="float:center;">
+          <label>טווח עבודה</label>
+      </div>
+    <input id="pac-input" class="controls" type="text" dir='rtl' placeholder="הכנס מקום">
+    <input id="radius-input" class="controls"  type="number" name="radius" dir='rtl' min="1" max="999">
+    <div id="map"></div>
+    <script>
+      var markers = [];
+      var circles = [];
+      var map;
+      var orgLat = {{lat}};
+      var orgLng = {{lng}};
+      var orgRadius = {{radius}};
+
+      
+      function DrawCircle(_center, _radius){
+        var circle = new google.maps.Circle({
+          strokeColor: '#f6aa1c',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#A63C06',
+          fillOpacity: 0.1,
+          map: map,
+          center: _center,
+          radius: _radius*1000
+        });
+        c = circles.pop();
+        if (c!=undefined) {
+          c.setMap(null);
+        }
+        circles.push(circle);
+      }
+
+      function placeMarkerAndPanTo(latLng, radius, map) {
+        m = markers.pop();
+        if (m!=undefined) {
+          m.setMap(null)
+        }
+        markers.push(new google.maps.Marker({
+          position: latLng,
+          map: map
+        }));
+        map.panTo(latLng);
+        var center = { lat: markers[0].position.lat(), lng:  markers[0].position.lng()};
+        DrawCircle(center, radius);
+      }
+      function initRadiusAndLocation(evt)
+      {
+        google.maps.event.addListenerOnce(map, 'idle', function(){
+          // do something only the first time the map is loaded
+          if (orgRadius > 1) {
+            placeMarkerAndPanTo({lat : orgLat, lng : orgLng}, orgRadius, map);
+            document.getElementById('Radius').value = orgRadius;
+          }
+        });
+      }
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 32.085300, lng: 34.781768},
+          zoom: 13,
+          mapTypeId: 'roadmap'
+        });
+
+        // Create the search box and link it to the UI element.
+        var input = document.getElementById('pac-input');
+        var searchBox = new google.maps.places.SearchBox(input);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        
+        var inputR = document.getElementById('radius-input');
+        map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(inputR);
+
+        // Create the DIV to hold the control and call the CenterControl()
+        // constructor passing in this DIV.
+        var centerControlDiv = document.createElement('div');
+        var centerControl = new CenterControl(centerControlDiv, map);
+        
+
+        centerControlDiv.index = 1;
+        map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv);
+
+        // Bias the SearchBox results towards current map's viewport.
+        map.addListener('bounds_changed', function() {
+          searchBox.setBounds(map.getBounds());
+        });
+        infoWindow = new google.maps.InfoWindow;
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            //infoWindow.setPosition(pos);
+            //infoWindow.setContent('Location found.');
+            //infoWindow.open(map);
+            map.setCenter(pos);
+          }, function() {
+            handleLocationError(true, infoWindow, map.getCenter());
+          });
+        } else {
+          // Browser doesn't support Geolocation
+          handleLocationError(false, infoWindow, map.getCenter());
+        }
+        
+        
+
+        // Listen for the event fired when the user selects a prediction and retrieve
+        // more details for that place.
+        searchBox.addListener('places_changed', function() {
+          var places = searchBox.getPlaces();
+
+          if (places.length == 0) {
+            return;
+          }
+
+          // Clear out the old markers.
+          markers.forEach(function(marker) {
+            marker.setMap(null);
+          });
+          markers = [];
+
+          // For each place, get the icon, name and location.
+          var bounds = new google.maps.LatLngBounds();
+          places.forEach(function(place) {
+            if (!place.geometry) {
+              console.log("Returned place contains no geometry");
+              return;
+            }
+            m = markers.pop();
+            if (m!=undefined) {
+              m.setMap(null)
+            }
+            // Create a marker for each place.
+            markers.push(new google.maps.Marker({
+              map: map,
+              title: place.name,
+              position: place.geometry.location
+            }));
+
+            if (place.geometry.viewport) {
+              // Only geocodes have viewport.
+              bounds.union(place.geometry.viewport);
+            } else {
+              bounds.extend(place.geometry.location);
+            }
+          });
+          map.fitBounds(bounds);
+        });
+
+        if(window.attachEvent) {
+          window.attachEvent('onload', initRadiusAndLocation);
+          } else {
+          if(window.onload) {
+              var curronload = window.onload;
+              var newonload = function(evt) {
+                  curronload(evt);
+                  initRadiusAndLocation(evt);
+              };
+              window.onload = newonload;
+          } else {
+              window.onload = initRadiusAndLocation;
+          }
+        }
+      }
+      
+      
+      function CenterControl(controlDiv, map) {
+
+        // Set CSS for the control border.
+        var controlUI = document.createElement('div');
+        controlUI.style.backgroundColor = '#f6aa1c';
+        controlUI.style.border = '2px solid #f6aa1c';
+        controlUI.style.borderRadius = '3px';
+        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+        controlUI.style.cursor = 'pointer';
+        controlUI.style.marginBottom = '22px';
+        controlUI.style.textAlign = 'center';
+        controlUI.title = 'Click to recenter the map';
+        controlDiv.appendChild(controlUI);
+
+        // Set CSS for the control interior.
+        var controlText = document.createElement('button');
+        controlText.style.color = '#420217';
+        controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+        controlText.style.fontSize = '16px';
+        controlText.style.lineHeight = '38px';
+        controlText.style.paddingLeft = '30px';
+        controlText.style.paddingRight = '30px';
+        controlText.innerHTML = 'עדכן';
+
+        
+        var controlRadius = document.createElement('input');
+        var controlRadiusDiv = document.createElement('div');
+        var controlRadiusLabel = document.createElement('label');
+        controlRadiusDiv.style.backgroundColor = '#ffffffff';
+        controlRadiusDiv.style.color = '#420217';
+        controlRadiusDiv.style.fontFamily = 'Roboto,Arial,sans-serif';
+        controlRadiusDiv.style.fontSize = '16px';
+        controlRadiusDiv.style.lineHeight = '38px';
+        controlRadiusDiv.style.paddingLeft = '1vw';
+        controlRadiusDiv.style.paddingRight = '1vw';
+        controlRadiusLabel.innerHTML = ' רדיוס';
+        controlRadius.type ="number";
+        controlRadius.id = 'Radius';
+        controlRadius.value = 1;
+        controlRadiusDiv.appendChild(controlRadius);
+        controlRadiusDiv.appendChild(controlRadiusLabel);
+        
+        controlUI.appendChild(controlRadiusDiv);
+        controlUI.appendChild(controlText);
+        controlRadius.addEventListener('input', function (evt) {
+          if (markers.length > 0) {
+            center = { lat: markers[0].position.lat(), lng:  markers[0].position.lng()};
+            radius = parseInt(this.value);
+            DrawCircle(center, radius);
+          }
+        });
+
+        map.addListener('click', function(e) {
+          placeMarkerAndPanTo(e.latLng, parseInt(document.getElementById('Radius').value, map));
+        });
+
+        // Setup the click event listeners: simply set the map to Chicago.
+        controlText.addEventListener('click', function(e) {
+          if (markers.length > 0) {
+            var lat = markers[0].position.lat();
+            var lng = markers[0].position.lng();
+            var radius = parseInt(document.getElementById('Radius').value);
+            $.ajax({
+              url: "{% url 'updateLocation' %}",
+              method: 'POST',
+              data : {
+                  csrfmiddlewaretoken: "{{ csrf_token }}",
+                  'lat' : lat,
+                  'lng' : lng,
+                  'radius'       : radius
+              },
+              dataType: 'json',
+              success: function(data)
+              {           
+                orgLat = data.lat;
+                orgLan = data.lng;
+                orgRadius = radius;
+                console.log("success");
+              },
+              error: function(error_data){
+                  console.log("error");
+                  console.log(error_data)
+              }
+          });
+          }
+          else {
+            alert('אנא בחר נקודה במפה קודם')
+          }
+        });
+
+      }
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCKbtYyIOqIe1mmCIPIp_wezViTi2JHiC0&libraries=places&callback=initMap"
+         async defer></script>
+  </body>
+</html>

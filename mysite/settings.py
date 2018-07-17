@@ -111,7 +111,7 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '/cloudsql/zariz-204206:europe-west4:zariz-sql3',
+            'HOST': '/cloudsql/zariz-204206:europe-west4:zariz-sql4',
             'NAME': 'ZarizDB',
             'USER': 'root',
             'PASSWORD': 'zariz001',

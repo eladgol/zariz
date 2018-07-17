@@ -14,6 +14,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 class UserFirebaseDB(models.Model):
     fireBaseUser = models.CharField(max_length=200)
@@ -41,11 +42,11 @@ class Workers(models.Model):
     )
 
 class BusyEvent(models.Model):
-    day = models.DateField(u'Day of the event', help_text=u'Day of the event')
-    start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
-    end_time = models.TimeField(u'Final time', help_text=u'Final time')
+    start_date = models.DateTimeField(u'Starting time', help_text=u'Starting time')
+    end_date = models.DateTimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
     userID = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,)
+    eventID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
 
 
 

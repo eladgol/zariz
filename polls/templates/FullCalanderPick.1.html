@@ -1,0 +1,252 @@
+<head>
+    <meta charset='utf-8' />
+    <link href='https://use.fontawesome.com/releases/v5.0.6/css/all.css' rel='stylesheet'>
+    {% load static %}
+    <script src="{% static 'scripts/modernizr-2.6.2.js' %}"></script>
+    <link href="{% static 'content/bootstrap3-editable/css/bootstrap-editable.css' %}" rel="stylesheet"/>
+    <script src="{% static 'scripts/jquery-1.10.2.js' %}"></script>
+    <script src="{% static 'scripts/bootstrap.js' %}"></script>
+    <script src="{% static 'scripts/respond.js' %}"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script> 
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="{% static 'content/bootstrap3-editable/js/bootstrap-editable.min.js' %}" rel="stylesheet"/></script>
+
+    <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.css' %}" rel='stylesheet' />
+    <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.print.min.css' %}" rel='stylesheet' media='print' />
+    <script src="{% static 'content/fullcalendar-3.9.0/lib/moment.min.js'%}" ></script>
+    <!-- <script src="{% static 'content/fullcalendar-3.9.0/lib/jquery.min.js'%}" ></script> -->
+    <script src="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.js'%}" ></script>
+    <script src="{% static 'content/fullcalendar-3.9.0/locale/he.js'%}" ></script>
+    
+    <script type="text/javascript">
+        var jsBusyDates = []
+        var jsRemoveDates = []
+        var jsAddDates = []
+        {% for busyDate in busyDates %}
+        jsBusyDates.push({start: '{{busyDate.0}}', title:'{{busyDate.1}}', id:'{{busyDate.3}}'});
+        {% endfor %}
+        
+          </script>
+    <style>
+    
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+      }
+    
+      #top,
+      #calendar.fc-unthemed {
+        font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+      }
+    
+      #top {
+        background: #eee;
+        border-bottom: 1px solid #ddd;
+        padding: 0 10px;
+        line-height: 40px;
+        font-size: 12px;
+        color: #000;
+      }
+    
+      #top .selector {
+        display: inline-block;
+        margin-right: 10px;
+      }
+    
+      #top select {
+        font: inherit; /* mock what Boostrap does, don't compete  */
+      }
+    
+      .left { float: left }
+      .right { float: right }
+      .clear { clear: both }
+    
+      #calendar {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 10px;
+      }
+    
+    </style>
+    <body>
+      <div id='top'>
+        </div>
+        <div class='clear'></div>
+      </div>
+      <a href="#" id="username" data-type="text" data-pk="1" data-url="" dir="rtl"> </a>
+
+      <div id='calendar'>
+        <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script> 
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+        <script src="{% static 'content/bootstrap3-editable/js/bootstrap-editable.min.js' %}" rel="stylesheet"/></script>
+    
+        <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.css' %}" rel='stylesheet' />
+        <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.print.min.css' %}" rel='stylesheet' media='print' />
+        <script src="{% static 'content/fullcalendar-3.9.0/lib/moment.min.js'%}" ></script>
+        <!-- <script src="{% static 'content/fullcalendar-3.9.0/lib/jquery.min.js'%}" ></script> -->
+        <script src="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.js'%}" ></script>
+        <script src="{% static 'content/fullcalendar-3.9.0/locale/he.js'%}" ></script>
+       
+      </div>
+      <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script> 
+      <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+      <script src="{% static 'content/bootstrap3-editable/js/bootstrap-editable.min.js' %}" rel="stylesheet"/></script>
+  
+      <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.css' %}" rel='stylesheet' />
+      <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.print.min.css' %}" rel='stylesheet' media='print' />
+      <script src="{% static 'content/fullcalendar-3.9.0/lib/moment.min.js'%}" ></script>
+      <!-- <script src="{% static 'content/fullcalendar-3.9.0/lib/jquery.min.js'%}" ></script> -->
+      <script src="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.js'%}" ></script>
+      <script src="{% static 'content/fullcalendar-3.9.0/locale/he.js'%}" ></script>
+     
+      <script>
+        function sendDateUpdate(busyTitle, sDo) {
+            if (sDo=="Remove")
+                entry = jsRemoveDates.pop() 
+            else
+                entry = jsAddDates.pop();
+            $.ajax({
+                url: "{% url 'updateDates' %}",
+                method: 'POST',
+                data : {
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    'busyDate' : entry.start,
+                    'busyTitle' : busyTitle,
+                    'busyId'        : entry.id,
+                    'sDo'       : sDo,
+                },
+                dataType: 'json',
+                success: function(data)
+                {
+                    if (sDo=="Add"){
+                        jsBusyDates[jsBusyDates.length] = {'start' : data.add.start, 'title' : data.add.title, 'id' : data.id};
+                    }
+                    else {
+                        for (len = jsBusyDates.length, i=0; i<len; ++i) {
+                            if (jsBusyDates[i].id==data.remove.id) {
+                                jsBusyDates.splice(i, 1);
+                                console.log("Remove " + String(i));
+                                break;
+                            };
+                        };
+                    };
+                    console.log(jsBusyDates);            
+                    console.log("success");
+                    $('#calendar').fullCalendar('removeEvents')// clear calander before refreshing
+                    $('#calendar').fullCalendar('renderEvents', jsBusyDates , true);
+                },
+                error: function(error_data){
+                    console.log("error");
+                    console.log(error_data);
+                }
+            });
+        };
+        $(document).ready(function() {
+        $('#username').editable({
+            type: 'text',
+            mode: 'popup',
+            placement :'bottom',
+            showbuttons : 'left',
+            emptytext: '',
+            onblur: "ignore",
+            success: function(response, busyTitle) {
+                sendDateUpdate(busyTitle, "Add");
+            }
+        });
+        $('#username').hide();
+        function showEditable(placeHolderText, posx, posy){
+            $('#username').show();
+            $('#username').css({
+                'position': 'absolute',
+                'top' : posy,
+                'left' : posx,
+            });
+            $('#username').editable({
+                placement :'right'
+            });
+            $('#username').editable('enable');
+            $('#username').editable('show');
+            if (placeHolderText!="") {
+                $('#username').editable({
+                    text : placeHolderText
+                });
+            }
+        }
+
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+        var yyyy = today.getFullYear();
+        if(dd<10) {
+            dd = '0'+dd
+        } 
+        if(mm<10) {
+            mm = '0'+mm
+        } 
+        today = yyyy + '-' + mm + '-' + dd;
+        
+        $('#calendar').fullCalendar({
+            dayClick: function(date) {
+                sDo = "Add";
+                UUIDid = generateUUID();
+                jsAddDates.push({'start' : date.format(), 'id' : UUIDid});
+                var busyDate = date
+                showEditable("", event.x, event.y)
+                console.log(date.toString());
+            },
+            eventClick: function(calEvent, jsEvent, view) {
+                sDo = "Remove";
+                jsRemoveDates.push({'start' : calEvent.start.format(), 'id' : calEvent.id});
+                sendDateUpdate(calEvent.title, "Remove");
+                // change the border color just for fun
+                $(this).css('border-color', 'red');
+            },
+            select: function(startDate, endDate){
+                
+            },
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay,listMonth'
+            },
+            
+            defaultDate: today,
+            weekNumbers: false,
+            navLinks: true, // can click day/week names to navigate views
+            editable: true,
+            eventLimit: true, // allow "more" link when too many events
+            events: jsBusyDates,
+        });
+        $('#calendar').fullCalendar('option', {
+            locale :'he',
+            isRTL : true
+        });
+
+    });
+
+    /**
+ * Fast UUID generator, RFC4122 version 4 compliant.
+ * @author Jeff Ward (jcward.com).
+ * @license MIT license
+ * @link http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
+ **/
+ function generateUUID() {
+        var lut = []; for (var i=0; i<256; i++) { lut[i] = (i<16?'0':'')+(i).toString(16); }
+        var d0 = Math.random()*0xffffffff|0;
+        var d1 = Math.random()*0xffffffff|0;
+        var d2 = Math.random()*0xffffffff|0;
+        var d3 = Math.random()*0xffffffff|0;
+        return lut[d0&0xff]+lut[d0>>8&0xff]+lut[d0>>16&0xff]+lut[d0>>24&0xff]+'-'+
+        lut[d1&0xff]+lut[d1>>8&0xff]+'-'+lut[d1>>16&0x0f|0x40]+lut[d1>>24&0xff]+'-'+
+        lut[d2&0x3f|0x80]+lut[d2>>8&0xff]+'-'+lut[d2>>16&0xff]+lut[d2>>24&0xff]+
+        lut[d3&0xff]+lut[d3>>8&0xff]+lut[d3>>16&0xff]+lut[d3>>24&0xff];
+
+    };
+    
+    </script>
+
+    </body>
+    </html>
+    

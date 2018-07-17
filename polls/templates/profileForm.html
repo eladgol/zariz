@@ -27,26 +27,9 @@
     
  </style>
 <!--form style="margin:0 auto;width:40vw" class="go-bottom"-->
-<form style="float:center;margin:0 auto;text-align:center;background-color:#f6aa1c;">
+<form style="float:center;margin:0 auto;text-align:center;">
     
-    <div  style="float:center;">
-      <img src={{photoAGCSPath}} id="profileImage" class="triggerFileInput" alt="profile image" style='height:10vh;margin-left: auto;margin-right: auto;border-radius: 50%;'>
-      <input type="file" id="my_file" style="display: none;" accept="image/*"/>
-      <script>
-        $("img").click(function() {
-          $("input[id='my_file']").click();
-      }); 
-      $("#my_file").on('change', function () {
-        console.log('FOO!');
-        var fReader = new FileReader();
-        fReader.readAsDataURL(this.files[0]);
-        fReader.onloadend = function(event){
-          postChanges("photoAGCSPath", event.target.result);
-        }
-        
-    });
-      </script>
-    </div>   
+ 
     <div  style="float:center;">
         <label>פרטים</label>
     </div>

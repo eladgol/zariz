@@ -3,19 +3,78 @@
 <head>
         {% load staticfiles %}  
         {% load static %}
+
+        <script src="{% static 'scripts/jquery-1.10.2.js' %}"></script>
+        <script src="{% static 'scripts/bootstrap.js' %}"></script>
+        <script src="{% static 'scripts/respond.js' %}"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'content/jsCalander/jsCalendar.css' %}">
-    <script type="text/javascript" src="{% static 'content/jsCalander/jsCalendar.js' %}"></script>
+    <script src="{% static 'scripts/modernizr-2.6.2.js' %}"></script>
+    <link href="{% static 'content/bootstrap3-editable/css/bootstrap-editable.css' %}" rel="stylesheet"/>
+    <script src="{% static 'content/bootstrap3-editable/js/bootstrap-editable.min.js' %}" rel="stylesheet"/></script>
+    <script  type="text/javascript" src="{% static 'content/jsCalander/jsCalendar.js' %}"></script>
+    <!-- <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/> -->
+    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script> -->
+    <!-- <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet"> -->
+    <!-- <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>-> -->
+    <style>
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            overflow: auto;
+            background: lime; /* Just to visualize the extent */
+            
+          }
+    </style>
+    
 </head>
 <!-- Buttons -->
 <!-- My calendar element -->
-<div id="my-calendar"></div>
-
+<div id="my-calendar" class="auto-jsCalendar fullscreen"></div>
+<a href="#" id="username" data-type="text" data-pk="1" data-url="" dir="rtl"> </a>
 <!-- Create the calendar -->
 <script type="text/javascript">
+    $(document).ready(function() {
+        $('#username').editable({
+            type: 'text',
+            mode: 'popup',
+            placement :'bottom',
+            showbuttons : 'left',
+            emptytext: '',
+            success: function(response, busyTitle) {
+                $.ajax({
+                    url: "{% url 'updateDates' %}",
+                    method: 'POST',
+                    data : {
+                        csrfmiddlewaretoken: "{{ csrf_token }}",
+                        'busyDate' : jsBusyDates[jsBusyDates.length - 1],
+                        'busyTitle' : busyTitle,
+                        'sDo'       : sDo
+                    },
+                    dataType: 'json',
+                    success: function(data)
+                    {
+                        
+                        console.log(jsBusyDates)            
+                        console.log("success")
+                        $('#username').hide()
+                    },
+                    error: function(error_data){
+                        console.log("error");
+                        console.log(error_data)
+                        $('#username').hide()
+                    }
+                });
+            }
+        });
+    });
     // Get the element
     var element = document.getElementById("my-calendar");
     // Create the calendar
-    var myCalendar = jsCalendar.new(element);
+    //var myCalendar = jsCalendar.new(element);
+    
     //var myCalendar = jsCalendar.new(element,"1-1-2017");
     // Get the buttons
 
@@ -26,36 +85,29 @@
     {% endfor %}
     
     // Add events
-    myCalendar.onDateClick(function(event, date){
+    $('#my-calendar').on('onDateClick', function(event, date){
         sDo = "Add";
-        if (jsBusyDates.indexOf(date) < 0) {
-            myCalendar.unselect(date);
+        if (jsBusyDates.indexOf(date) > 0) {
+            this.unselect(date);
             sDo = "Remove";
         } else {
             jsBusyDates.push(date);
-            myCalendar.select(date);
+            this.select(date);
         }
-        inputA.value = date.toString();
-        $.ajax({
-            url: "{% url 'updateDates' %}",
-            method: 'POST',
-            data : {
-                csrfmiddlewaretoken: "{{ csrf_token }}",
-                'busyDate' : date,
-                'sDo'       : sDo
-            },
-            dataType: 'json',
-            success: function(data)
-            {updateDates
-                
-                console.log(jsBusyDates)            
-                console.log("success")
-            },
-            error: function(error_data){
-                console.log("error");
-                console.log(error_data)
-            }
+        var busyDate = date
+        $('#username').show();
+        $('#username').css({
+            'position': 'absolute',
+            'top' : event.y
         });
+        $('#username').editable({
+            placement :'right'
+        });
+        res = $('#username').click();
+
+        console.log(date.toString());
+
+        
     });
 </script>
 

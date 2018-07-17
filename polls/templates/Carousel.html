@@ -1,17 +1,45 @@
 {% extends "layout.html" %}
-
-
 {% block content %}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} - זריז</title>
+  {% load staticfiles %}  
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'content/bootstrap.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'content/site.css' %}" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="{% static 'scripts/modernizr-2.6.2.js' %}"></script>
+  <link rel="icon" 
+    type="image/bmp" 
+    href="{% static 'content/favicon.ico' %}">
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script> 
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="{% static 'content/bootstrap3-editable/js/bootstrap-editable.min.js' %}" rel="stylesheet"/></script>
+
+    <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.css' %}" rel='stylesheet' />
+    <link href="{% static 'content/fullcalendar-3.9.0/fullcalendar.print.min.css' %}" rel='stylesheet' media='print' />
+    <script src="{% static 'content/fullcalendar-3.9.0/lib/moment.min.js'%}" ></script>
+    <!-- <script src="{% static 'content/fullcalendar-3.9.0/lib/jquery.min.js'%}" ></script> -->
+    <script src="{% static 'content/fullcalendar-3.9.0/fullcalendar.min.js'%}" ></script>
+    <script src="{% static 'content/fullcalendar-3.9.0/locale/he.js'%}" ></script>
+   
+</head>
+
+
 
     <style>
             .carousel-indicators li {
                 bottom:-5vh;
                 color:#A63C06;
+                border:1px solid #f6aa1c;
                 border-color:#A63C06 ;
             }
-            .carousel-indicators .active {
+            .carousel-indicators.active {
                 bottom:-5vh;
-                background-color:#A63C06;
+                background-color: #f6aa1c;
                 border-color:#A63C06;
                 color:#A63C06;
             }
@@ -26,29 +54,75 @@
               list-style-position: inside;
               margin: 0 auto;
               padding: 0;
-              left: 0
+              left: 0;
+              width: 100%;
+              background-color: #420217;
             }
 
     </style>
-<div class="container" id="container" name="container"> 
+<div class="container" id="container" name="container" > 
+    <div  style="float:center;background-color:#f6aa1c;height:100%;float:center;margin:0 auto;text-align:center;">
+        <img src={{photoAGCSPath}} id="profileImage" class="triggerFileInput" alt="profile image" style='height:10vh;margin-left: auto;margin-right: auto;border-radius: 50%;'>
+        <input type="file" id="my_file" style="display: none;" accept="image/*"/>
+        <script>
+          $("img").click(function() {
+            $("input[id='my_file']").click();
+        }); 
+        $("#my_file").on('change', function () {
+          console.log('FOO!');
+          var fReader = new FileReader();
+          fReader.readAsDataURL(this.files[0]);
+          fReader.onloadend = function(event){
+            postChanges("photoAGCSPath", event.target.result);
+          }
+          
+      });
+      function postChanges(name, value) {
+        $.ajax({
+          url: "{% url 'updateInputForm' %}",
+          method: 'POST',
+          data : {
+              csrfmiddlewaretoken: "{{ csrf_token }}",
+              'name' : name,
+              'value' : value
+          },
+          dataType: 'json',
+          success: function(data){
+              console.log("success")
+              $('#profileImage').attr('src', data.photoAGCSPath);
+          },
+          error: function(error_data){
+              console.log("error");
+              console.log(error_data)
+          }
+        });
+      }
+        </script>
+      </div>  
   <div id="myCarousel" class="carousel slide" data-interval="false" data-ride="carousel">
     <!-- Indicators -->
 
     <!-- Wrapper for slides -->
     <div class="carousel-inner">
-        <div class="item active">
+        <div class="item active" style="height:100%">
             {% include "profileForm.html" %}
         </div>
-
-        <div class="item">
+        <div class="item" style="height:100%">
             {% include "OccupationPick.html" %}
         </div>
-
+        <div class="item" style="height:100%">
+          {% include "LocationForm.html" %}
+        </div>
+        <div class="item" style="height:100%">
+          {% include "FullCalanderPick.html" %}
+        </div>
     </div>
     <div>
             <ol class="carousel-indicators">
               <li data-target="#myCarousel" data-slide-to="0" class="active" ></li>
               <li data-target="#myCarousel" data-slide-to="1"></li>
+              <li data-target="#myCarousel" data-slide-to="2"></li>
+              <li data-target="#myCarousel" data-slide-to="3"></li>
             </ol>
         </div>
 

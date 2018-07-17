@@ -43,7 +43,7 @@
       
 </style>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top" style="height:5vh;">
+    <div class="navbar navbar-inverse navbar-fixed-top" style="height:5vh;position:sticky;margin-bottom:0">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -70,9 +70,6 @@
         </footer>
     </div>
 
-    <script src="{% static 'scripts/jquery-1.10.2.js' %}"></script>
-    <script src="{% static 'scripts/bootstrap.js' %}"></script>
-    <script src="{% static 'scripts/respond.js' %}"></script>
 {% block scripts %}{% endblock %}
 
 </body>

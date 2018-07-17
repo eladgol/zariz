@@ -43,6 +43,7 @@ from polls.forms import BootstrapAuthenticationForm
 from datetime import datetime
 from logic import *
 from models import UserFirebaseDB, Workers, BusyEvent
+from django.utils import timezone
 
 from accessGoogleCloudStorage import *
 
@@ -94,19 +95,49 @@ def testlocallogin(request):
         'testlocallogin.html',
         {}
     )
-
-def updateDates(request):
-    occupaitonList = request.POST.getlist('occupationList[]', None)
-    # does user exist
+def updateLocation(request):
+    lat = request.POST.get('lat', None)
+    lng = request.POST.get('lng', None)
+    radius = request.POST.get('radius', None)
+    
     try:
         worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
-        print("Error")
-        return JsonResponse({'error' : True})
-    BusyEvent()
-    
-    payload = {'success': True}
+        worker = Workers(userID=request.user.id)
+    worker.lat = float(lat)
+    worker.lng = float(lng)
+    worker.radius = float(radius)
+    worker.save()
+
+    payload = {'success': True,}
     return JsonResponse(payload)
+def updateDates(request):
+    busyDate = request.POST.get('busyDate', None)
+    busyTitle = request.POST.get('busyTitle', None)
+    d = datetime.strptime(busyDate,'%Y-%m-%d')
+    busyId = request.POST.get('busyId', None)
+    sDo = request.POST.get('sDo', None)
+    remove = {}
+    add = []
+    if 'Remove' in sDo:
+        try:
+            a = BusyEvent.objects.filter(eventID=busyId)
+        except Exception as e:
+            print(str(e))   
+        remove = {'start': busyDate, 'title':busyTitle,  'id' : busyId}
+        a.delete()
+    else:
+        from datetime import time
+        startTime = d.replace(hour=0,minute=0,second=0)
+        endTime = d.replace(hour=23,minute=59,second=59)
+        event = BusyEvent(userID=request.user, notes = busyTitle, start_date = startTime, end_date = endTime, eventID = busyId)
+        add = {'start' : busyDate, 'title' : busyTitle, 'id' : busyId}
+        event.save()
+
+    
+    payload = {'success': True, 'remove':remove, 'add':add}
+    return JsonResponse(payload)
+
 def updateInputForm(request):
     name = request.POST.get('name', None)
     value = request.POST.get('value', None)
@@ -202,8 +233,13 @@ def carousel(request):
     possibleFields, pickedFields = getOccupationDetails(request)
     d['fields'] = possibleFields
     d['picked'] = pickedFields
-
-
+    
+    d['busyDates'] = []
+    try:
+        busyEvents = BusyEvent.objects.filter(userID=request.user.id)
+        d['busyDates'] = [(b.start_date.strftime('%Y-%m-%d'), b.notes, b.eventID) for b in busyEvents]
+    except Exception as e:
+        print(e.message)
     return render(
         request,
         'carousel.html',
@@ -239,15 +275,33 @@ def occupationPage(request):
              #'fields' : data
         }
     )
-
+def calander2(request):
+    busyDates = []
+    try:
+        busyEvents = BusyEvent.objects.filter(userID=request.user.id)
+        busyDates = [(d.start_date.strftime('%Y-%m-%d'), d.notes) for d in busyEvents]
+    except Exception as e:
+        print(e.message)
+    return render(
+        request,
+        'FullCalanderPick.html',
+        {
+            'busyDates' : busyDates
+        }
+    )
 def calander(request):
     # try:
     #     worker = Workers.objects.get(localUser=request.user.username)
     # except Exception as e:
     #     print("Error")
     #     return JsonResponse({'error' : True})
-    busyEvents = BusyEvent.objects.filter(worker__userid=request.user.id)
-    busyDates = [d.value_to_string() for d in busyEvents]
+    
+    busyDates = []
+    try:
+        busyEvents = BusyEvent.objects.get(userID=request.user.id)
+        busyDates = [d.value_to_string() for d in busyEvents]
+    except:
+        pass
     return render(
         request,
         'CalanderPick.html',
@@ -276,4 +330,12 @@ def demoForm2(request):
         request,
         'demoForm2.html',
         {}
+    )
+def LocationForm(request):
+    worker = getWorker(request.user.username)
+    d = model_to_dict(worker)
+    return render(
+        request,
+        'LocationForm.html',
+        d
     )
