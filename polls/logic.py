@@ -19,7 +19,8 @@ def fbAuthenticate(userToken):
             photoFileName = getPhotoFileName(userSession.photo_url, 
                 userSession.display_name, decodedToken[u'firebase']['sign_in_provider'])
         except Exception as e:
-            pass
+            photoFileName = ""
+            photoURL= ""
         
     except auth.AuthError as exc:
         if exc.code == 'ID_TOKEN_REVOKED':
@@ -27,7 +28,7 @@ def fbAuthenticate(userToken):
         else:
             # Token is invalid
             payload = {'success': False, 'redirectUrl' : 'InvalidToken'}
-
+    
     payload = {'success': True, 'userEmail' : userSession.email, 'photoURL' : userSession.photo_url, 'photoFileName' : photoFileName}
     
     return payload
@@ -68,6 +69,33 @@ def updateFireBaseDB(userEmail):
         fbUser.userID = user
         fbUser.save()
     return fbUser
+
+def createUser(request, localUser, localPassword, localEmail):
+    bNewUser = True
+    payload = {"success" : "false"}
+    try:
+        user = User.objects.get(username=localUser)
+        logging.info("User {} already exists".format(localUser))
+        bNewUser = False
+    except Exception as e:
+        try:
+            logging.info("New User?? {}".format(e.message))
+            user = User.objects.create_superuser(localUser, localEmail, localPassword)
+            
+        except Exception as e2:
+            logging.info("Had problems creating superuser - {}".format(e.message))
+        try:
+            user.save()
+        except Exception as e2:
+            logging.info("Unable to save user - {}".format(e.message))
+    if bNewUser:
+        payload = authenticateUser(request, localUser, localPassword)   
+        payload['isNewUser'] = 'true'
+        payload['success'] = 'true' 
+    else:
+        payload['isNewUser'] = 'false'
+        payload['success'] = 'false' 
+    return payload
 
 def authenticateUser(request, localUser, localPassword):
     userAuth = authenticate(username = localUser, password = localPassword)

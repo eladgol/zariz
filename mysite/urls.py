@@ -16,9 +16,9 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 import django.contrib.auth.views
-from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation
+from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest
 from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm
-from polls.views import demoForm, demoForm2, carousel
+from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -47,6 +47,8 @@ urlpatterns = [
     url(r'^updateLocation',updateLocation, name='updateLocation'),
     url(r'^calander/',calander, name='calander'),
     url(r'^calander2/',calander2, name='calander2'),
+    url(r'^localLogin/',localLogin, name='localLogin'),
+    url(r'^signUp/',signUp, name='signUp'),
     url(r'^testlocallogin/', django.contrib.auth.views.login,
     {
         'template_name': 'testlocallogin.html',
@@ -55,11 +57,15 @@ urlpatterns = [
         {
             'title': 'Log in',
             'year': datetime.now().year,
+            'next': '/accounts/profile/'
         }
     }, name = 'testlocallogin'),
     url(r'^ShowWorkers/', ShowWorkers, name='ShowWorkers'),
     url(r'^demoForm/', demoForm, name='demoForm'),
     url(r'^demoForm2/', demoForm2, name='demoForm2'),
     url(r'^carousel/', carousel, name='carousel'),
-    url(r'^LocationForm/', LocationForm, name='LocationForm')
+    url(r'^LocationForm/', LocationForm, name='LocationForm'),
+    url(r'^notifyTest/', notifyTest, name='notifyTest'),
+    url(r'^dummy/', dummy, name='dummy')
+    
 ]

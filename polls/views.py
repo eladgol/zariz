@@ -189,6 +189,34 @@ def updateOccupation(request):
     payload = {'success': True}
     return JsonResponse(payload)
 
+def localLogin(request):
+    localUser = request.POST.get('localUser', None)
+    localPassword = request.POST.get('localPassword', None)
+    payload = authenticateUser(request, localUser, localPassword) 
+    if payload['success']:
+        payload['redirectUrl'] = 'accounts/profile/'
+        worker = getWorker(request.user.username)
+        if worker.photoAGCSPath is '' and 'photoURL' in payload and payload['photoURL']!='':
+            print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+            downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
+    
+    return JsonResponse(payload)
+
+def signUp(request):
+    localUser = request.POST.get('localUser', None)
+    localPassword = request.POST.get('localPassword', None)
+    localEmail = request.POST.get('localEmail', None)
+    payload = createUser(request, localUser, localPassword, localEmail) 
+    if payload['success']:
+        payload['redirectUrl'] = 'accounts/profile/'
+        worker = getWorker(request.user.username)
+        if worker is not None:
+            if worker.photoAGCSPath is '' and 'photoURL' in payload and payload['photoURL']!='':
+                print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+                downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
+
+    return JsonResponse(payload)
+
 def firebaseSuccess(request):
     userToken = request.GET.get('userToken', None)
     payload = fbAuthenticate(userToken)
@@ -207,7 +235,7 @@ def firebaseSuccess(request):
         payload2 = {'success': True, 'redirectUrl' : 'accounts/profile/'}
 
     worker = getWorker(request.user.username)
-    if worker.photoAGCSPath is '':
+    if worker.photoAGCSPath is '' and payload['photoURL']!='':
         print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
         downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
 
@@ -238,11 +266,14 @@ def carousel(request):
     try:
         busyEvents = BusyEvent.objects.filter(userID=request.user.id)
         d['busyDates'] = [(b.start_date.strftime('%Y-%m-%d'), b.notes, b.eventID) for b in busyEvents]
+        if d['photoAGCSPath']=='':
+            d['photoAGCSPath'] = 'https://storage.googleapis.com/zariz-204206.appspot.com/BlankProfile.png'
+            
     except Exception as e:
         print(e.message)
     return render(
         request,
-        'carousel.html',
+        'Carousel.html',
         d
     )
     
@@ -339,3 +370,11 @@ def LocationForm(request):
         'LocationForm.html',
         d
     )
+def notifyTest(request):
+    return render(
+        request,
+        'notifyTest.html',
+        {}
+    ) 
+def dummy(request):
+    return JsonResponse({});
