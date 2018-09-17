@@ -37,7 +37,7 @@
             grid-template-columns: 16vw 16vw 16vw 16vw 16vw;
             grid-template-areas:
             "header  header  header header header"
-            "sidebar sidebar content content content"
+            "content content content content content"
             "footer  footer  footer footer footer";
             background-color: #fff;
             opacity: 0.8;
@@ -78,9 +78,6 @@
 </style>
 <div class="wrapper">
     <div class="box header" dir="rtl">כניסה</div>
-    <div class="box sidebar">
-        {%include 'loginBox.html'%}
-    </div>
     <div class="box content">
         {%include 'firebaseLoginBox.html'%}
     </div>
