@@ -50,7 +50,7 @@ from accessGoogleCloudStorage import *
 import firebase_admin
 from firebase_admin import credentials
 from ZarizSettings import *
-
+from django.views.decorators.csrf import csrf_exempt
 print("Initalizing firebase SDK")
 #toDo: handle fire base authenticatiom the proper way, using a session token
 cred = credentials.Certificate('zariz-204206-firebase-adminsdk-8qex8-1d92e2b93c.json')
@@ -61,7 +61,7 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
 else:
     import ptvsd
 
-
+@csrf_exempt
 def index(request):
     #ptvsd.break_into_debugger()
     a = _("test")
@@ -81,6 +81,7 @@ def index(request):
     #    request,
     #    'loginGrid.html')
     
+@csrf_exempt
 def loginFirebase(request):
     #ptvsd.break_into_debugger()
     return render(
@@ -88,13 +89,14 @@ def loginFirebase(request):
         'loginFirebase.html',
         {}
     )
-
+@csrf_exempt
 def testlocallogin(request):
     return render(
         request,
         'testlocallogin.html',
         {}
     )
+@csrf_exempt
 def updateLocation(request):
     lat = request.POST.get('lat', None)
     lng = request.POST.get('lng', None)
@@ -111,6 +113,8 @@ def updateLocation(request):
 
     payload = {'success': True,}
     return JsonResponse(payload)
+
+@csrf_exempt
 def updateDates(request):
     busyDate = request.POST.get('busyDate', None)
     busyTitle = request.POST.get('busyTitle', None)
@@ -138,6 +142,7 @@ def updateDates(request):
     payload = {'success': True, 'remove':remove, 'add':add}
     return JsonResponse(payload)
 
+@csrf_exempt
 def updateInputForm(request):
     name = request.POST.get('name', None)
     value = request.POST.get('value', None)
@@ -177,6 +182,7 @@ def updateInputForm(request):
      'lastName' : worker.lastName, 'wage' : worker.minWage, 'photoAGCSPath' : worker.photoAGCSPath}
     return JsonResponse(payload)
 
+@csrf_exempt
 def updateOccupation(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
     # does user exist
@@ -189,6 +195,7 @@ def updateOccupation(request):
     payload = {'success': True}
     return JsonResponse(payload)
 
+@csrf_exempt
 def localLogin(request):
     localUser = request.POST.get('localUser', None)
     localPassword = request.POST.get('localPassword', None)
@@ -202,6 +209,7 @@ def localLogin(request):
     
     return JsonResponse(payload)
 
+@csrf_exempt
 def signUp(request):
     localUser = request.POST.get('localUser', None)
     localPassword = request.POST.get('localPassword', None)
@@ -217,6 +225,7 @@ def signUp(request):
 
     return JsonResponse(payload)
 
+@csrf_exempt
 def firebaseSuccess(request):
     userToken = request.GET.get('userToken', None)
     payload = fbAuthenticate(userToken)
@@ -241,7 +250,8 @@ def firebaseSuccess(request):
 
 
     return JsonResponse(payload2)
-    
+
+@csrf_exempt   
 @login_required(login_url="/login/")
 def profilePage(request):
     # worker = getWorker(request.user.username)
@@ -252,6 +262,8 @@ def profilePage(request):
     #     dWorker
     # )
     return carousel(request)
+
+@csrf_exempt
 @login_required(login_url="/carousel/")
 def carousel(request):
 
@@ -276,7 +288,8 @@ def carousel(request):
         'Carousel.html',
         d
     )
-    
+
+@csrf_exempt   
 def getOccupationDetails(request):
     locale.setlocale(locale.LC_ALL, '')
     #sData = codecs.open(os.path.dirname(__file__) + '/../'+ 'static/content/zarizSettings.json', encoding='utf-8').read()
@@ -292,6 +305,7 @@ def getOccupationDetails(request):
         pass
     return possibleFields, pickedFields
 
+@csrf_exempt
 def occupationPage(request):
     possibleFields, pickedFields = getOccupationDetails(request)
     # if (len(pickedFields) != len(occupaitonList))
@@ -306,6 +320,8 @@ def occupationPage(request):
              #'fields' : data
         }
     )
+
+@csrf_exempt
 def calander2(request):
     busyDates = []
     try:
@@ -320,6 +336,8 @@ def calander2(request):
             'busyDates' : busyDates
         }
     )
+
+@csrf_exempt
 def calander(request):
     # try:
     #     worker = Workers.objects.get(localUser=request.user.username)
@@ -340,6 +358,8 @@ def calander(request):
             'busyDates' : busyDates
         }
     )
+
+@csrf_exempt
 def ShowWorkers(request):
     workers = Workers.objects.all()
     workerList = [w for w in workers]
@@ -350,18 +370,24 @@ def ShowWorkers(request):
             'workers' : workerList
         }
     )
+
+@csrf_exempt
 def demoForm(request):
     return render(
         request,
         'demoForm.html',
         {}
     )
+
+@csrf_exempt
 def demoForm2(request):
     return render(
         request,
         'demoForm2.html',
         {}
     )
+
+@csrf_exempt
 def LocationForm(request):
     worker = getWorker(request.user.username)
     d = model_to_dict(worker)
@@ -370,11 +396,15 @@ def LocationForm(request):
         'LocationForm.html',
         d
     )
+
+@csrf_exempt
 def notifyTest(request):
     return render(
         request,
         'notifyTest.html',
         {}
     ) 
+
+@csrf_exempt
 def dummy(request):
     return JsonResponse({});
