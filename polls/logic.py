@@ -115,6 +115,7 @@ def authenticateUser(request, localUser, localPassword):
 
 def getWorker(username):
     bCreateWorker =False
+    print("Start getWorker for {}".format(username))
     try:
         user = User.objects.get(username=username)
     except Exception as e:
@@ -124,7 +125,7 @@ def getWorker(username):
         worker = Workers.objects.filter(userID__username=username)
     except Exception as e:
         bCreateWorker = True
-
+        print("will create worker for {}".format(username))
     if bCreateWorker or len(worker) == 0:
         try:
             worker = Workers(userID=user)
@@ -133,5 +134,5 @@ def getWorker(username):
         except Exception as e:
             print(str(e))
             return None
-
+    print("END getWorker for {}, worker userID {}".format(username, worker[0].userID))
     return worker[0]

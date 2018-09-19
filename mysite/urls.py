@@ -18,7 +18,7 @@ from django.contrib import admin
 import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest
 from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm
-from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp
+from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -66,6 +66,7 @@ urlpatterns = [
     url(r'^carousel/', carousel, name='carousel'),
     url(r'^LocationForm/', LocationForm, name='LocationForm'),
     url(r'^notifyTest/', notifyTest, name='notifyTest'),
-    url(r'^dummy/', dummy, name='dummy')
+    url(r'^dummy/', dummy, name='dummy'),
+    url(r'^getFieldDetails/', getFieldDetails, name='dummy'),
     
 ]
