@@ -43,7 +43,7 @@ DEBUG = True
 # have ALLOWED_HOSTS = ['*'] when the app is deployed. If you deploy a Django
 # app not on App Engine, make sure to set an appropriate host here.
 # See https://docs.djangoproject.com/en/1.10/ref/settings/
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', '192.168.1.13', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
 
 # Application definition
 
@@ -106,6 +106,7 @@ except ImportError:
 
 # [START db_setup]
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
+    print("Running on production App Engine")
     # Running on production App Engine, so connect to Google Cloud SQL using
     # the unix socket at /cloudsql/<your-cloudsql-connection string>
     DATABASES = {
@@ -114,16 +115,27 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
             'HOST': '/cloudsql/zariz-204206:europe-west4:zariz-sql4',
             'NAME': 'ZarizDB',
             'USER': 'root',
-            'PASSWORD': 'zariz001',
+            'PASSWORD': 'LetMeIn123',
         }
     }
 else:
+    print("Running Locally")
     # Running locally so connect to either a local MySQL instance or connect to
     # Cloud SQL via the proxy. To start the proxy via command line:
     #
     #     $ cloud_sql_proxy -instances=[INSTANCE_CONNECTION_NAME]=tcp:3306
     #
     # See https://cloud.google.com/sql/docs/mysql-connect-proxy
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.mysql',
+    #         'HOST': '127.0.0.1',
+    #         'PORT': '3307',
+    #         'NAME': 'ZarizDB',
+    #         'USER': 'root',
+    #         'PASSWORD': 'zariz001',
+    #     }
+    # }
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -131,9 +143,13 @@ else:
             'PORT': '3306',
             'NAME': 'ZarizDB',
             'USER': 'root',
-            'PASSWORD': 'zariz001',
+            'PASSWORD': 'LetMeIn123',
         }
     }
+
+
+
+    
 # [END db_setup]
 
 # Internationalization
@@ -155,3 +171,7 @@ USE_TZ = True
 
 STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
+
+#SECURE_SSL_REDIRECT = True
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True

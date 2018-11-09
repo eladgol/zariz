@@ -16,9 +16,16 @@
 import os
 import sys
 import ptvsd
+import random
+print(ptvsd.__version__)
+p = random.randint(40000, 50000)
+ip = '127.0.0.1'
+print("Enabling Attach on {}:{}".format(ip, p))
+ptvsd.enable_attach(address = (ip, p), redirect_output=True)
+
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 
     from django.core.management import execute_from_command_line
-    #ptvsd.enable_attach("my_secret", address = ('0.0.0.0', 3000))
+
     execute_from_command_line(sys.argv)

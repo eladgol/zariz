@@ -18,7 +18,7 @@ from django.contrib import admin
 import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest
 from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm
-from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails
+from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, ExportDB, LoadDBFromFile
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -61,6 +61,8 @@ urlpatterns = [
         }
     }, name = 'testlocallogin'),
     url(r'^ShowWorkers/', ShowWorkers, name='ShowWorkers'),
+    url(r'^ExportDB', ExportDB, name='ExportDB'),
+    url(r'^LoadDBFromFile', LoadDBFromFile, name='LoadDBFromFile'),
     url(r'^demoForm/', demoForm, name='demoForm'),
     url(r'^demoForm2/', demoForm2, name='demoForm2'),
     url(r'^carousel/', carousel, name='carousel'),

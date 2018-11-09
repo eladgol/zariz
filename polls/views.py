@@ -44,29 +44,46 @@ from datetime import datetime
 from logic import *
 from models import UserFirebaseDB, Workers, BusyEvent
 from django.utils import timezone
+from django.core import serializers
+from django.core.files.storage import FileSystemStorage
+#from accessGoogleCloudStorage import *
 
-from accessGoogleCloudStorage import *
-
-import firebase_admin
-from firebase_admin import credentials
+#import firebase_admin
+#from firebase_admin import credentials
 from ZarizSettings import *
 from django.views.decorators.csrf import csrf_exempt
-print("Initalizing firebase SDK")
+#print("Initalizing firebase SDK")
 #toDo: handle fire base authenticatiom the proper way, using a session token
-cred = credentials.Certificate('zariz-204206-firebase-adminsdk-8qex8-1d92e2b93c.json')
-default_app = firebase_admin.initialize_app(cred)
+#cred = credentials.Certificate('zariz-204206-firebase-adminsdk-8qex8-1d92e2b93c.json')
+#default_app = firebase_admin.initialize_app(cred)
 
-if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+#if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+ #   pass
+#else:
+#    import ptvsd
+def pretty_print_POST(req):
+    """
+    At this point it is completely built and ready
+    to be fired; it is "prepared".
+
+    However pay attention at the formatting used in 
+    this function because it is programmed to be pretty 
+    printed and may differ from the actual request.
+    """
+    # print('{}\n{}\n{}\n\n{}'.format(
+    #     '-----------START-----------',
+    #     req.method + ' ' + req.url,
+    #     '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+    #     req.body,
+    # ))
     pass
-else:
-    import ptvsd
 
 @csrf_exempt
 def index(request):
     #ptvsd.break_into_debugger()
     a = _("test")
     print(a)
-    b = agcs_get()
+    #b = agcs_get()
     filename = "/bucket/test.txt"
     return django.contrib.auth.views.login(request,
         template_name='loginGrid.html',
@@ -91,6 +108,8 @@ def loginFirebase(request):
     )
 @csrf_exempt
 def testlocallogin(request):
+    # import ptvsd
+    # ptvsd.break_into_debugger()
     return render(
         request,
         'testlocallogin.html',
@@ -197,6 +216,7 @@ def updateOccupation(request):
 
 @csrf_exempt
 def localLogin(request):
+    pretty_print_POST(request)
     localUser = request.POST.get('localUser', None)
     localPassword = request.POST.get('localPassword', None)
     payload = authenticateUser(request, localUser, localPassword) 
@@ -206,11 +226,12 @@ def localLogin(request):
         if worker.photoAGCSPath is '' and 'photoURL' in payload and payload['photoURL']!='':
             print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
             downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
-    
+    print("Login payload result {} for {}, {}".format(payload, localUser, request.user.username))
     return JsonResponse(payload)
 
 @csrf_exempt
 def signUp(request):
+    pretty_print_POST(request)
     localUser = request.POST.get('localUser', None)
     localPassword = request.POST.get('localPassword', None)
     localEmail = request.POST.get('localEmail', None)
@@ -263,6 +284,7 @@ def profilePage(request):
     # )
     return carousel(request)
 
+
 @csrf_exempt
 @login_required(login_url="/carousel/")
 def carousel(request):
@@ -288,6 +310,16 @@ def carousel(request):
         'Carousel.html',
         d
     )
+
+@csrf_exempt
+def getFieldDetails(request):
+    pretty_print_POST(request)
+    print("getFieldDetails for {}".format(request.user.username))
+    worker = getWorker(request.user.username)
+    print("getFieldDetails after getWorker")
+    d = model_to_dict(worker)
+    print("getFieldDetails {}".format(d))
+    return JsonResponse(d)
 
 @csrf_exempt   
 def getOccupationDetails(request):
@@ -408,3 +440,32 @@ def notifyTest(request):
 @csrf_exempt
 def dummy(request):
     return JsonResponse({});
+
+import pdb
+def ExportDB(request):
+    print("Hello")
+    dataWorkers = str([str(w) for w in Workers.objects.values()])
+    dataUsers = str([str(u) for u in User.objects.values()])
+    data = str({'Workers' : dataWorkers, 'Users' : dataUsers})
+    response = HttpResponse(data, content_type='text/plain')
+    sFileName = "ZarizExportDB_" + str(time.time()) + ".json"
+    response['Content-Disposition'] = 'attachment; filename="' + '"' + sFileName +'"'
+    return response
+
+from ast import literal_eval as leval
+def LoadDBFromFile(request):
+    if request.method == 'POST' and request.FILES['myfile']:
+        f = request.FILES['myfile']
+        
+        for chunk in f:
+            try:
+                userList = leval(leval(chunk)['Users'])
+                for u in userList:
+                    pass
+                workerList = leval(leval(chunk)['Workers'])
+                for w in workerList:
+                    pass                   
+            except Exception as e:
+                print("Exception - {}".format(e))
+        return render(request, 'ShowWorkers.html')
+    return render(request, 'ShowWorkers.html')
