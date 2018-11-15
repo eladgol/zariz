@@ -16,9 +16,9 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 import django.contrib.auth.views
-from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest
+from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm
 from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm
-from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, ExportDB, LoadDBFromFile
+from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, ExportDB, LoadDBFromFile, occupationDetails
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -40,9 +40,11 @@ urlpatterns = [
     url(r'^fire/$', loginFirebase),
     url(r'^firebaseSuccess/', firebaseSuccess, name="firebaseSuccess"),
     url(r'^accounts/profile/', profilePage, name='profilePage'),
-    url(r'^occupation', occupationPage, name='occupationPage'),
-    url(r'^updateOccupation',updateOccupation, name='updateOccupation'),
-    url(r'^updateInputForm', updateInputForm, name='updateInputForm'),
+    url(r'^occupation/', occupationPage, name='occupationPage'),
+    url(r'^occupationDetails/', occupationDetails, name='occupationDetails'),
+    url(r'^updateOccupation/',updateOccupation, name='updateOccupation'),
+    url(r'^updateInputForm/', updateInputForm, name='updateInputForm'),
+    url(r'^updateAllInputsForm/', updateAllInputsForm, name='updateAllInputsForm'),
     url(r'^updateDates',updateDates, name='updateDates'),
     url(r'^updateLocation',updateLocation, name='updateLocation'),
     url(r'^calander/',calander, name='calander'),

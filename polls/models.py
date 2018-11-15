@@ -31,10 +31,11 @@ class Workers(models.Model):
     firstName = models.CharField(max_length=200, default= "")
     lastName = models.CharField(max_length=200, default = "")
     photoAGCSPath = models.CharField(max_length=200, default = "")
+    place = models.CharField(max_length=200, default = "")
     lat = models.FloatField(default=0.0)
     lng = models.FloatField(default=0.0)
     radius = models.FloatField(default=0.1)
-    minWage = models.FloatField(default=29.12)
+    wage = models.FloatField(default=29.12)
     userID = models.OneToOneField(
         User,
         on_delete=models.CASCADE,

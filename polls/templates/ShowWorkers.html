@@ -150,7 +150,7 @@
     </head>
     <body>
         <div style= "color: #337ab7;">
-            <form action="ExportDB" method="post" style="display:inline-block;">
+            <form action="/ExportDB" method="post" style="display:inline-block;">
                 {% csrf_token %}
                 <input type="submit" value="ExportDB">
             </form>
@@ -161,6 +161,49 @@
             <form action="ClearDB" method="post" style="display:inline-block;" name ="ClearDBForm">
                 {% csrf_token %}
             </form>
+            <form action="/LoadDBFromFile" enctype="multipart/form-data" method="post" style="display:inline-block;" name ="LoadDBFromFile">
+              {% csrf_token %}
+              <input type="file" name="myfile">
+              <button type="submit">LoadDBFromFile</button>
+            </form>
+            <div>
+                {% csrf_token %}
+                <input type="file" id="my_file" style="display: none;" accept=".xml"/>
+                <script>
+                  $("img").click(function() {
+                    $("input[id='my_file']").click();
+                }); 
+                $("#my_file").on('change', function () {
+                  console.log('FOO!');
+                  var fReader = new FileReader();
+                  fReader.readAsDataURL(this.files[0]);
+                  fReader.onloadend = function(event){
+                    postChanges("DBFile", event.target.result);
+                  }
+                  
+              });
+              function postChanges(name, value) {
+                $.ajax({
+                  url: "{% url 'LoadDBFromFile' %}",
+                  method: 'POST',
+                  data : {
+                      csrfmiddlewaretoken: "{{ csrf_token }}",
+                      'name' : name,
+                      'value' : value
+                  },
+                  dataType: 'json',
+                  success: function(data){
+                      console.log("success")
+                      
+                  },
+                  error: function(error_data){
+                      console.log("error");
+                      console.log(error_data)
+                  }
+                });
+              }
+                </script>
+              </div>
             <button data-toggle="modal" data-target="#confirm-delete">
               ClearDB
           </button>
@@ -194,7 +237,7 @@
                     <th>lat</th>
                     <th>lng</th>
                     <th>radius</th>
-                    <th>minWage</th>
+                    <th>wage</th>
                     <th>userID</th>
                     <th>photoAGCSPath</th>
                     <th>occupationFieldListString</th>
@@ -211,7 +254,8 @@
                         <td data-heading="lat"                      >{{worker.lat}} </td>
                         <td data-heading="lng"                      >{{worker.lng}} </td>
                         <td data-heading="radius"                   >{{worker.radius}} </td>
-                        <td data-heading="minWage"                  >{{worker.minWage}} </td>
+                        <td data-heading="place"         >{{worker.place}}</td>
+                        <td data-heading="wage"                  >{{worker.wage}} </td>
                         <td data-heading="userID"                   >{{worker.userID}} </td>
                         <td data-heading="photoAGCSPath"            >{{worker.photoAGCSPath}}</td>
                         <td data-heading="occupationFieldListString">{{worker.occupationFieldListString}} </td>

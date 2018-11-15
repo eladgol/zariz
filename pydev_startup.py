@@ -23,5 +23,3 @@ ptvsd.enable_attach(address = (ip, p), redirect_output=True)
 #ptvsd.break_into_debugger()
 #The debug server has started and you can now use VS Code to attach to the application for debugging
 print("Google App Engine has started, ready to attach the debugger")
-#ptvsd.wait_for_attach()
-print("Google App Engine has started, ready to attach the debugger")

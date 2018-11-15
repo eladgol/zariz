@@ -320,6 +320,7 @@
             var lat = markers[0].position.lat();
             var lng = markers[0].position.lng();
             var radius = parseInt(document.getElementById('Radius').value);
+            var discription = (document.getElementById('pac-input').value);
             $.ajax({
               url: "{% url 'updateLocation' %}",
               method: 'POST',
@@ -327,7 +328,8 @@
                   csrfmiddlewaretoken: "{{ csrf_token }}",
                   'lat' : lat,
                   'lng' : lng,
-                  'radius'       : radius
+                  'radius'       : radius,
+                  'place' : place
               },
               dataType: 'json',
               success: function(data)

@@ -43,7 +43,7 @@ DEBUG = True
 # have ALLOWED_HOSTS = ['*'] when the app is deployed. If you deploy a Django
 # app not on App Engine, make sure to set an appropriate host here.
 # See https://docs.djangoproject.com/en/1.10/ref/settings/
-ALLOWED_HOSTS = ['*', '192.168.1.13', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
+ALLOWED_HOSTS = ['*', ' 192.168.43.14', '192.168.1.13', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
 
 # Application definition
 
@@ -112,7 +112,7 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '/cloudsql/zariz-204206:europe-west4:zariz-sql4',
+            'HOST': '/cloudsql/zariz-204206:europe-west4:zariz-sql5',
             'NAME': 'ZarizDB',
             'USER': 'root',
             'PASSWORD': 'LetMeIn123',

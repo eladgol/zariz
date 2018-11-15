@@ -120,7 +120,7 @@ def updateLocation(request):
     lat = request.POST.get('lat', None)
     lng = request.POST.get('lng', None)
     radius = request.POST.get('radius', None)
-    
+    place = request.POST.get('place', None)
     try:
         worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
@@ -128,6 +128,7 @@ def updateLocation(request):
     worker.lat = float(lat)
     worker.lng = float(lng)
     worker.radius = float(radius)
+    worker.place = str(place)
     worker.save()
 
     payload = {'success': True,}
@@ -159,6 +160,84 @@ def updateDates(request):
 
     
     payload = {'success': True, 'remove':remove, 'add':add}
+    return JsonResponse(payload)
+
+@csrf_exempt
+def updateAllInputsForm(request):
+    firstName = request.POST.get('firstName', None)
+    lastName = request.POST.get('lastName', None)
+    place = request.POST.get('place', None)
+    photoAGCSPath = request.POST.get('photoAGCSPath', None)
+    wage = float(request.POST.get('wage', None)) if request.POST.get('wage', None) else None
+    lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
+    lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
+    radius = float(request.POST.get('radius', None)) if request.POST.get('radius', None) else None 
+
+    try:
+        worker = Workers.objects.get(userID=request.user.id)
+    except Exception as e:
+        worker = Workers(userID=request.user.id)
+    bWorkerChanged = False
+    # if photoAGCSPath is not None and photoAGCSPath != worker.photoAGCSPath:
+    #     splitVal = photoAGCSPath.split(',')
+    #     base64Val = splitVal[1]
+    #     header64 = splitVal[0]
+    #     file_ext = 'unknown'
+    #     if 'jpeg' in header64:
+    #         file_ext = 'jpeg'
+    #     if 'jpg' in header64:
+    #         file_ext = 'jpg'
+    #     elif 'gif' in header64:
+    #         file_ext = 'gif'
+    #     elif 'png' in header64:
+    #         file_ext = 'png'
+    #     else:
+    #         file_ext = header64[len(u'data:image/'):]
+
+    #     buff = base64.b64decode(base64Val)
+
+    #     sFileName = 'profile_pic_{}_{}_.{}'.format(request.user.username, time.time(), file_ext)
+    #     worker.photoAGCSPath = uploadBlob(sFileName, buff, header64)
+    #     bWorkerChanged = True
+    if firstName is not None and worker.firstName != firstName:
+        worker.firstName = firstName
+        bWorkerChanged = True
+    if lastName is not None and worker.lastName != lastName:
+        worker.lastName = lastName
+        bWorkerChanged = True
+    if place is not None and worker.place != place:
+        worker.place = place
+        bWorkerChanged = True
+    if radius is not None and worker.radius != radius:
+        worker.radius = radius
+        bWorkerChanged = True
+    if wage is not None and worker.wage != wage:
+        worker.wage = float(wage)
+        bWorkerChanged = True
+    if lat is not None and worker.lat != lat:
+        worker.lat = float(lat)
+        bWorkerChanged = True
+    if lng is not None and worker.lng != lng:
+        worker.lng = lng;
+        bWorkerChanged = True    
+    try:
+        user = User.objects.get(username=request.user)
+    except Exception as e:
+        print("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
+        return JsonResponse({"sucess" : False})
+    if bWorkerChanged:
+        worker.save()
+        payload = {'success': True, 'firstName' : worker.firstName,
+            'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
+            'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
+            'username' : user.username}
+        print("updateAllInputsForm, success,  returning - {}".format(payload))
+    else:
+        payload = {'success': True, 'Error' : 'no change', 'firstName' : worker.firstName,
+            'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
+            'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
+            'username' : user.username}
+        print("updateAllInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
     return JsonResponse(payload)
 
 @csrf_exempt
@@ -195,10 +274,10 @@ def updateInputForm(request):
     elif 'lastName' in name:
         worker.lastName = value
     elif 'wage' in name:
-        worker.minWage = float(name)
+        worker.wage = float(name)
     worker.save()
     payload = {'success': True, 'firstName' : worker.firstName,
-     'lastName' : worker.lastName, 'wage' : worker.minWage, 'photoAGCSPath' : worker.photoAGCSPath}
+     'lastName' : worker.lastName, 'wage' : worker.wage, 'photoAGCSPath' : worker.photoAGCSPath}
     return JsonResponse(payload)
 
 @csrf_exempt
@@ -352,6 +431,16 @@ def occupationPage(request):
              #'fields' : data
         }
     )
+@csrf_exempt
+def occupationDetails(request):
+    print("occupationDetails, Start")
+    possibleFields, pickedFields = getOccupationDetails(request)
+    # if (len(pickedFields) != len(occupaitonList))
+    #     worker.occupationFieldListString = str(pickedFields)
+    j = JsonResponse({'success' : True, 'possibleFields' : str(possibleFields), 'pickedFields' : str(pickedFields)})
+    print("occupationDetails, Returning {}".format(j))
+    return j
+    
 
 @csrf_exempt
 def calander2(request):

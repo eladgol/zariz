@@ -5,8 +5,9 @@ threadsafe: yes
 handlers:
 - url: /static
   static_dir: static/
-- url: .*
+- url: /.*
   script: mysite.wsgi.application
+  secure: always
 
 # Only pure Python libraries can be vendored
 # Python libraries that use C extensions can
@@ -17,6 +18,7 @@ libraries:
   version: 1.2.5
 - name: ssl
   version: latest
+
 # [END django_app]
 
 # Google App Engine limits application deployments to 10,000 uploaded files per
