@@ -41,6 +41,29 @@ class Workers(models.Model):
         on_delete=models.CASCADE,
         null=True, blank=True,
     )
+    workerID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
+class Bosses(models.Model):
+    firstName = models.CharField(max_length=200, default= "")
+    lastName = models.CharField(max_length=200, default = "")
+    buisnessName = models.CharField(max_length=200, default = "")
+    photoAGCSPath = models.CharField(max_length=200, default = "")
+    place = models.CharField(max_length=200, default = "")
+    lat = models.FloatField(default=0.0)
+    lng = models.FloatField(default=0.0)
+    userID = models.OneToOneField(User)
+    bossID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
+    
+class Jobs(models.Model):
+    discription = models.CharField(max_length=2048, default= "")
+    occupationFieldListString = models.CharField(max_length=2048, default = "")
+    wage = models.FloatField(default=29.12)
+    place = models.CharField(max_length=200, default = "")
+    nWorkers = models.IntegerField(default=1)
+    lat = models.FloatField(default=0.0)
+    lng = models.FloatField(default=0.0)
+    jobID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
+    workerID = models.ForeignKey(Workers, null=True)
+    bossID = models.ForeignKey(Bosses, db_column="userID", null=True)
 
 class BusyEvent(models.Model):
     start_date = models.DateTimeField(u'Starting time', help_text=u'Starting time')

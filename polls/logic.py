@@ -1,6 +1,6 @@
 #from firebase_admin import auth
 import logging
-from models import UserFirebaseDB, Workers, BusyEvent
+from models import UserFirebaseDB, Workers, BusyEvent, Bosses, Jobs
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from urlparse import urlparse
@@ -137,3 +137,27 @@ def getWorker(username):
             return None
     print("END getWorker for {}, worker userID {}".format(username, worker[0].userID))
     return worker[0]
+
+def getBoss(username):
+    bCreateBoss =False
+    print("Start getBoss for {}".format(username))
+    try:
+        user = User.objects.get(username=username)
+    except Exception as e:
+        print(str(e))
+        return None
+    try:
+        Boss = Bosses.objects.filter(userID__username=username)
+    except Exception as e:
+        bCreateBoss = True
+        print("will create Boss for {}".format(username))
+    if bCreateBoss or len(Boss) == 0:
+        try:
+            Boss = Bosses(userID=user)
+            Boss.save()
+            return Boss
+        except Exception as e:
+            print(str(e))
+            return None
+    print("END getBoss for {}, Boss userID {}".format(username, Boss[0].userID))
+    return Boss[0]

@@ -172,6 +172,7 @@ def updateAllInputsForm(request):
     lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
     lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
     radius = float(request.POST.get('radius', None)) if request.POST.get('radius', None) else None 
+    lOccupationFieldListString = str(request.POST.get('lOccupationFieldListString', None).replace(']','').replace('[','').split(','))
 
     try:
         worker = Workers.objects.get(userID=request.user.id)
@@ -219,26 +220,169 @@ def updateAllInputsForm(request):
         bWorkerChanged = True
     if lng is not None and worker.lng != lng:
         worker.lng = lng;
-        bWorkerChanged = True    
+        bWorkerChanged = True   
+    if lOccupationFieldListString is not None and worker.occupationFieldListString != lOccupationFieldListString:
+        worker.occupationFieldListString = lOccupationFieldListString
+        bWorkerChanged = True
     try:
         user = User.objects.get(username=request.user)
     except Exception as e:
         print("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
-        return JsonResponse({"sucess" : False})
+        return JsonResponse({"success" : False})
+    
     if bWorkerChanged:
         worker.save()
         payload = {'success': True, 'firstName' : worker.firstName,
             'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
             'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
-            'username' : user.username}
+            'username' : user.username, 'lOccupationFieldListString' : str(worker.occupationFieldListString)}
         print("updateAllInputsForm, success,  returning - {}".format(payload))
     else:
         payload = {'success': True, 'Error' : 'no change', 'firstName' : worker.firstName,
             'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
             'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
-            'username' : user.username}
+            'username' : user.username, 'lOccupationFieldListString' : str(worker.occupationFieldListString)}
         print("updateAllInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
     return JsonResponse(payload)
+@csrf_exempt
+def getAllJobsAsBoss(request):
+    try:
+        Boss = Bosses.objects.get(userID=request.user.id)
+    except Exception as e:
+        Boss = Bosses(userID=request.user.id)
+    
+    jobs = Jobs.objects.filter(bossID=Boss)
+    d = {'success': True}
+    i=0
+    for job in jobs:
+        d['{}'.format(i)]=model_to_dict(job)
+        i=i+1
+    
+    return JsonResponse(d)
+@csrf_exempt
+def deleteJobAsBoss(request):
+    jobID = request.POST.get('jobID', None)
+    try:
+        job = Jobs.objects.get(jobID=jobID).delete()
+    except Exception as e:
+        print("deleteJobAsBoss - Failed no such job ID {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "no such JobID"})
+    print("deleteJobAsBoss - Deleted job ID {}".format(jobID))
+    return JsonResponse({'success': True})
+    
+@csrf_exempt
+def updateJobAsBoss(request):
+    discription = request.POST.get('discription', None)
+    
+    place = request.POST.get('place', None)
+    lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
+    lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
+    wage = float(request.POST.get('wage', None)) if request.POST.get('wage', None) else None
+    nWorkers = float(request.POST.get('nWorkers', None)) if request.POST.get('nWorkers', None) else None
+    occupationFieldListString = request.POST.get('lOccupationFieldListString', '') # toDo: change to support multiple occupations per Job
+    bNewJob = False
+    jobID = request.POST.get('jobID', None)
+    print("updateJobAsBoss - jobID {}, discription - {}, place {}, lat {}, lng {}, wage {}, occupationFieldListString {}".
+            format(jobID, discription, place, lat, lng, wage, occupationFieldListString))
+            
+    try:
+        Boss = Bosses.objects.get(userID=request.user.id)
+    except Exception as e:
+        Boss = Bosses(userID=request.user.id)
+
+    if jobID == '-1':
+        Job = Jobs(bossID=Boss)
+        bNewJob = True
+        print("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
+    else:
+        try:
+            Job = Jobs.objects.get(jobID=jobID, bossID=Boss)
+            bNewJob = False
+            print("updateJobAsBoss - Existing job id - {}".format(Job.jobID))
+        except Exception as e2:
+            Job = Jobs(bossID=Boss)
+            bNewJob = True
+            print("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
+    
+    if (bNewJob or [Job.discription, Job.place, Job.lat, Job.lng, Job.wage, Job.nWorkers, Job.occupationFieldListString] 
+        != [discription, place, lat, lng, wage, nWorkers, occupationFieldListString]):
+        Job.discription = discription
+        Job.place = place
+        Job.lat = lat
+        Job.lng = lng
+        Job.wage = wage
+        Job.nWorkers = nWorkers
+        Job.bossID=Boss
+        Job.occupationFieldListString = occupationFieldListString
+        Job.save()
+        
+        payload = {'success': True, 'jobID': str(Job.jobID), 'discription' : str(discription), 'place' : str(place), 
+            'lat' : str(lat), 'lng' : str(lng), 'wage' : str(wage), 'nWorkers' : str(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+        print("updateJobAsBoss - Saved Job, payload {}".format(payload))
+    else:
+        payload = {'success': True, 'Error' : 'no change', 'jobID': str(Job.jobID), 'discription' : str(discription), 'place' : str(place), 
+            'lat' : str(lat), 'lng' : str(lng), 'wage' : str(wage), 'nWorkers' : str(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+        print("updateJobAsBoss - No change, payload {}".format(payload))
+    return JsonResponse(payload)
+
+@csrf_exempt
+def updateAllBossInputsForm(request):
+    firstName = request.POST.get('firstName', None)
+    lastName = request.POST.get('lastName', None)
+    buisnessName = request.POST.get('buisnessName', None)
+    place = request.POST.get('place', None)
+    photoAGCSPath = request.POST.get('photoAGCSPath', None)
+    
+    lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
+    lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
+    
+
+    try:
+        Boss = Bosses.objects.get(userID=request.user.id)
+    except Exception as e:
+        Boss = Bosses(userID=request.user.id)
+    bBossChanged = False
+    
+    if firstName is not None and Boss.firstName != firstName:
+        Boss.firstName = firstName
+        bBossChanged = True
+    if lastName is not None and Boss.lastName != lastName:
+        Boss.lastName = lastName
+        bBossChanged = True
+    if place is not None and Boss.place != place:
+        Boss.place = place
+        bBossChanged = True
+    if buisnessName is not None and Boss.buisnessName != buisnessName:
+        Boss.buisnessName = buisnessName
+        bBossChanged = True
+   
+    if lat is not None and Boss.lat != lat:
+        Boss.lat = float(lat)
+        bBossChanged = True
+    if lng is not None and Boss.lng != lng:
+        Boss.lng = lng;
+        bBossChanged = True    
+    try:
+        user = User.objects.get(username=request.user)
+    except Exception as e:
+        print("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
+        return JsonResponse({"sucess" : False})
+        
+    if bBossChanged:
+        Boss.save()
+        payload = {'success': True, 'firstName' : Boss.firstName,
+            'lastName' : Boss.lastName,  'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
+            'lat' : str(Boss.lat), 'lng' : str(Boss.lng), 'userID' : str(user.id), 'email' : user.email, 
+            'username' : user.username}
+        print("updateAllBossInputsForm, success,  returning - {}".format(payload))
+    else:
+        payload = {'success': True, 'Error' : 'no change', 'firstName' : Boss.firstName,
+            'lastName' : Boss.lastName, 'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
+            'lat' : str(Boss.lat), 'lng' : str(Boss.lng), 'userID' : str(user.id), 'email' : user.email, 
+            'username' : user.username}
+        print("updateAllBossInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
+    return JsonResponse(payload)
+
 
 @csrf_exempt
 def updateInputForm(request):
@@ -283,6 +427,7 @@ def updateInputForm(request):
 @csrf_exempt
 def updateOccupation(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
+    print(occupaitonList)
     # does user exist
     try:
         worker = Workers.objects.get(userID=request.user.id)
@@ -398,6 +543,15 @@ def getFieldDetails(request):
     print("getFieldDetails after getWorker")
     d = model_to_dict(worker)
     print("getFieldDetails {}".format(d))
+    return JsonResponse(d)
+@csrf_exempt
+def getBossFieldDetails(request):
+    pretty_print_POST(request)
+    print("getBossFieldDetails for {}".format(request.user.username))
+    Boss = getBoss(request.user.username)
+    print("getBossFieldDetails after getBoss")
+    d = model_to_dict(Boss)
+    print("getBossFieldDetails {}".format(d))
     return JsonResponse(d)
 
 @csrf_exempt   

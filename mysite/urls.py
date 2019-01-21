@@ -16,9 +16,9 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 import django.contrib.auth.views
-from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm
-from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm
-from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, ExportDB, LoadDBFromFile, occupationDetails
+from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm, updateAllBossInputsForm, deleteJobAsBoss
+from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss
+from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, getBossFieldDetails, ExportDB, LoadDBFromFile, occupationDetails
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -45,12 +45,15 @@ urlpatterns = [
     url(r'^updateOccupation/',updateOccupation, name='updateOccupation'),
     url(r'^updateInputForm/', updateInputForm, name='updateInputForm'),
     url(r'^updateAllInputsForm/', updateAllInputsForm, name='updateAllInputsForm'),
+    url(r'^updateAllBossInputsForm/', updateAllBossInputsForm, name='updateAllBossInputsForm'),
+    url(r'updateJobAsBoss/', updateJobAsBoss, name='updateJobAsBoss'),
     url(r'^updateDates',updateDates, name='updateDates'),
     url(r'^updateLocation',updateLocation, name='updateLocation'),
     url(r'^calander/',calander, name='calander'),
     url(r'^calander2/',calander2, name='calander2'),
     url(r'^localLogin/',localLogin, name='localLogin'),
     url(r'^signUp/',signUp, name='signUp'),
+    url(r'^getAllJobsAsBoss/',getAllJobsAsBoss, name='getAllJobsAsBoss'),
     url(r'^testlocallogin/', django.contrib.auth.views.login,
     {
         'template_name': 'testlocallogin.html',
@@ -72,5 +75,6 @@ urlpatterns = [
     url(r'^notifyTest/', notifyTest, name='notifyTest'),
     url(r'^dummy/', dummy, name='dummy'),
     url(r'^getFieldDetails/', getFieldDetails, name='dummy'),
-    
+    url(r'^getBossFieldDetails/', getBossFieldDetails, name='dummy'),
+    url(r'^deleteJobAsBoss/', deleteJobAsBoss, name='deleteJobAsBoss'),
 ]
