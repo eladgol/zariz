@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "python",
+            "command": "python",
+            "type": "process",
+            "args": [
+                "/Users/admin/Downloads/google-cloud-sdk/bin/dev_appserver.py",
+                "--python_startup_script=${workspaceFolder}/pydev_startup.py",
+                "--automatic_restart=no",
+                "--max_module_instances=default:1",
+                "--threadsafe_override=default:false",
+                "--host=10.0.0.2",
+                "--default_gcs_bucket_name=zariz-204206",
+                "${workspaceFolder}/app.yaml"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "python2",
+            "command": "python",
+            "type": "process",
+            "args": [
+                "manage.py",
+                "runserver",
+                "--nothreading",
+                "--noreload",
+                "192.168.1.13:8080"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
