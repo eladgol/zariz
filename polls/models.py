@@ -14,6 +14,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+import ast
 import uuid
 
 class UserFirebaseDB(models.Model):
@@ -62,9 +63,11 @@ class Jobs(models.Model):
     lat = models.FloatField(default=0.0)
     lng = models.FloatField(default=0.0)
     jobID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
-    workerID = models.ForeignKey(Workers, null=True)
+    workerID_responded = models.ManyToManyField(Workers, related_name="workerID_responded")
     bossID = models.ForeignKey(Bosses, db_column="userID", null=True)
-
+    workerID_authorized = models.ManyToManyField(Workers,related_name="workerID_authorized")
+    workerID_sentNotification = models.ManyToManyField(Workers, related_name="workerID_sentNotification")
+    workerID_hired = models.ManyToManyField(Workers, related_name="workerID_hired")
 class BusyEvent(models.Model):
     start_date = models.DateTimeField(u'Starting time', help_text=u'Starting time')
     end_date = models.DateTimeField(u'Final time', help_text=u'Final time')
@@ -73,6 +76,37 @@ class BusyEvent(models.Model):
     eventID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
 
 
+class NotficationMessages(models.Model):
+    to = models.CharField(max_length=256, default="")
+    messageID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
+    JobID = models.ForeignKey(Jobs, on_delete=models.CASCADE, null=True, blank=True,)
+    workerID = models.ForeignKey(Workers, on_delete=models.CASCADE, null=True, blank=True,)
+    status = models.CharField(max_length=256, default="sent")
 
+class ListField(models.CharField):
+    def __init__(self, *args, **kwargs):
+        super(ListField, self).__init__(*args, **kwargs)
 
+    def to_python(self, value):
+        if not value:
+            value = []
+
+        if isinstance(value, list):
+            return value
+
+        return ast.literal_eval(value)
+
+    def get_prep_value(self, value):
+        if value is None:
+            return value
+
+        return unicode(value)
+    def from_db_value(self, value, expression, connection, context):
+        if value is None:
+            return value
+        return str(value)
+        
+    def value_to_string(self, obj):
+        value = self._get_val_from_obj(obj)
+        return self.get_db_prep_value(value)
 

@@ -25,6 +25,8 @@ import codecs
 import locale
 import os
 import base64
+import uuid
+import json
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
@@ -42,25 +44,28 @@ from django.forms.models import model_to_dict
 from polls.forms import BootstrapAuthenticationForm
 from datetime import datetime
 from logic import *
-from models import UserFirebaseDB, Workers, BusyEvent
+from models import UserFirebaseDB, Workers, BusyEvent, NotficationMessages
 from django.utils import timezone
 from django.core import serializers
 from django.core.files.storage import FileSystemStorage
 #from accessGoogleCloudStorage import *
-
-#import firebase_admin
-#from firebase_admin import credentials
 from ZarizSettings import *
 from django.views.decorators.csrf import csrf_exempt
-#print("Initalizing firebase SDK")
-#toDo: handle fire base authenticatiom the proper way, using a session token
-#cred = credentials.Certificate('zariz-204206-firebase-adminsdk-8qex8-1d92e2b93c.json')
-#default_app = firebase_admin.initialize_app(cred)
 
-#if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
- #   pass
-#else:
-#    import ptvsd
+
+from fcm_django.models import FCMDevice
+d = FCMDevice.objects.all()
+locale.setlocale(locale.LC_ALL, '')
+def _get_access_token():
+    """
+    get access token for firebase
+    """
+    import firebase_admin
+    from firebase_admin import credentials
+    cred = credentials.Certificate('..{}serviceAccountKey.json'.format(os.sep))
+    access_token_info = credentials.get_access_token()
+    return access_token_info.access_token
+
 def pretty_print_POST(req):
     """
     At this point it is completely built and ready
@@ -160,7 +165,135 @@ def updateDates(request):
 
     
     payload = {'success': True, 'remove':remove, 'add':add}
+    
     return JsonResponse(payload)
+
+@csrf_exempt
+def queryJob(request):
+    jobID = request.POST.get('jobID', None)
+    payload = {'success': True}
+    try:
+        job = Jobs.objects.get(jobID=jobID)
+    except Exception as e:
+        print("queryJob - Failed no such job ID {}".format(jobID))
+        return JsonResponse({'success': False, 'error' : 'no such jobID'})
+    try:
+        lWorkers = []
+        for w in Workers.objects.all():
+            #print("{}".format(w.occupationFieldListString))
+            print("{}".format(job.occupationFieldListString))
+            #print("{}".format(ast.literal_eval(w.occupationFieldListString)))
+            
+            
+    except Exception as e:
+        print("queryJob - ERROR1 for job ID {}, {}".format(jobID, str(e)))
+        return JsonResponse({'success': False, 'error' : str(e)})
+    try:
+        lWorkers = []
+        for w in Workers.objects.all():
+            print("queryJob - worker - {}, {}, {};".format(w.firstName, w.lastName, w.occupationFieldListString))
+            if w.firstName=="":
+                print("queryJob - empty worker ignoring...")
+                continue
+            if job.occupationFieldListString in ast.literal_eval(w.occupationFieldListString):
+                #try:
+                #    job.workerID_sentNotification.get(pk=w.pk)
+                #    print("queryJob - Already added for {} {} to {}".format(w.firstName, w.lastName, jobID))
+                #except Exception as e:
+                #    lWorkers.append(w)
+                lWorkers.append(w)
+    except Exception as e:
+        print("queryJob - Some error for job ID {}, {}".format(jobID, str(e)))
+        return JsonResponse({'success': False, 'error' : str(e)})
+
+    
+    payload['workers']=[model_to_dict(w) for w in lWorkers]
+
+    import urllib3
+    http = urllib3.PoolManager()
+    for w in lWorkers:
+        print("queryJob, device loop, worker {}, {}".format(w.firstName, w.lastName))
+        try:
+            devices=FCMDevice.objects.filter(user=w.userID)
+        except:
+            return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
+        job.workerID_sentNotification.add(w)
+        for device in devices:
+            print("queryJob, sending push notification to {}".format(device.registration_id))
+            sendPushNotificationMessage(http, job, device, w)            
+
+            
+    print("queryJob End, {}".format(payload))
+    job.save()
+    return JsonResponse(payload)
+
+@csrf_exempt
+def confirmJob(request):
+    jobID = request.POST.get('jobID', None)
+    bAccepted = (request.POST.get('accepted', None)=='true') if request.POST.get('accepted', None) else False 
+    
+    try:
+        worker = Workers.objects.get(userID=request.user.id)
+    except Exception as e:
+        print("confirmJob  - Failed no such worker")
+        return JsonResponse({"success" : False, "Error" : "no such Worker"})
+    try:
+        job = Jobs.objects.filter(jobID=jobID)
+    except Exception as e:
+        print("confirmJob  - Failed no such job ID {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "no such JobID"})
+    j=job.first()
+    lResponded = [w for w in j.workerID_responded.all() if (w.userID == worker.userID)]
+    lAccepted = [w for w in j.workerID_authorized.all() if (w.userID == worker.userID)]
+    bAdded = False
+    if len(lResponded)==0:
+        j.workerID_responded.add(worker)
+        if bAccepted:
+            j.workerID_authorized.add(worker)
+        j.save()
+        payload = JsonResponse({"success" : True, 'Error' : 'accepted'})
+        bAdded = True
+    else:
+        if bAccepted:
+            if len(lAccepted)==0:
+                j.workerID_authorized.add(worker)
+                j.save()
+                payload = JsonResponse({'success': True, 'Error' : 'refused'})
+                bAdded = True
+            else:
+                payload = JsonResponse({'success': True, 'Error' : 'confirmed already'})
+        else:
+            if len(lAccepted)!=0:
+                j.workerID_authorized.remove(worker)
+                j.save()
+                payload = JsonResponse({'success': True, 'Error' : 'changed to refused'})
+                bAdded = True
+            else:
+                payload = JsonResponse({'success': True, 'Error' : 'refused'})
+
+    print("confirmJob End, {}, worker {} {} to job {}, {} {}".format(payload.content, worker.firstName, worker.lastName, j.jobID, "updated to" if bAdded else "No change", "Accepted" if bAccepted else "Refused"))
+    return payload
+
+@csrf_exempt
+def hire(request):
+    jobID = request.POST.get('jobID', None)
+    try:
+        worker = Workers.objects.get(userID=request.user.id)
+    except Exception as e:
+        print("hire  - Failed no such worker")
+        return JsonResponse({"success" : False, "Error" : "no such Worker"}) 
+    try:
+        job = Jobs.objects.filter(jobID=jobID)
+    except Exception as e:
+        print("confirmJob  - Failed no such job ID {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "no such JobID"})
+    j=job.first()
+    j.workerID_hired.add(worker)
+    j.save()
+    payload = JsonResponse({"success" : True})
+    lHired = [w for w in j.workerID_hired.all()]
+    print("hire End, {}, worker {} {} hired to job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, j.jobID, len(lHired)))
+    return payload
 
 @csrf_exempt
 def updateAllInputsForm(request):
@@ -219,7 +352,7 @@ def updateAllInputsForm(request):
         worker.lat = float(lat)
         bWorkerChanged = True
     if lng is not None and worker.lng != lng:
-        worker.lng = lng;
+        worker.lng = lng
         bWorkerChanged = True   
     if lOccupationFieldListString is not None and worker.occupationFieldListString != lOccupationFieldListString:
         worker.occupationFieldListString = lOccupationFieldListString
@@ -256,9 +389,22 @@ def getAllJobsAsBoss(request):
     i=0
     for job in jobs:
         d['{}'.format(i)]=model_to_dict(job)
+        d['{}'.format(i)]['workerID_responded']=[]
+        for w in job.workerID_responded.all():
+            d['{}'.format(i)]['workerID_responded'].append(w.workerID)
+        d['{}'.format(i)]['workerID_authorized']=[]
+        for w in job.workerID_authorized.all():
+            d['{}'.format(i)]['workerID_authorized'].append(w.workerID)
+        d['{}'.format(i)]['workerID_sentNotification']=[]
+        for w in job.workerID_sentNotification.all():
+            d['{}'.format(i)]['workerID_sentNotification'].append(w.workerID)
+        d['{}'.format(i)]['workerID_hired']=[]
+        for w in job.workerID_hired.all():
+            d['{}'.format(i)]['workerID_hired'].append(w.workerID)
         i=i+1
     
     return JsonResponse(d)
+
 @csrf_exempt
 def deleteJobAsBoss(request):
     jobID = request.POST.get('jobID', None)
@@ -316,12 +462,12 @@ def updateJobAsBoss(request):
         Job.occupationFieldListString = occupationFieldListString
         Job.save()
         
-        payload = {'success': True, 'jobID': str(Job.jobID), 'discription' : str(discription), 'place' : str(place), 
-            'lat' : str(lat), 'lng' : str(lng), 'wage' : str(wage), 'nWorkers' : str(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+        payload = {'success': True, 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
+            'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
         print("updateJobAsBoss - Saved Job, payload {}".format(payload))
     else:
-        payload = {'success': True, 'Error' : 'no change', 'jobID': str(Job.jobID), 'discription' : str(discription), 'place' : str(place), 
-            'lat' : str(lat), 'lng' : str(lng), 'wage' : str(wage), 'nWorkers' : str(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+        payload = {'success': True, 'Error' : 'no change', 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
+            'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
         print("updateJobAsBoss - No change, payload {}".format(payload))
     return JsonResponse(payload)
 
@@ -372,13 +518,13 @@ def updateAllBossInputsForm(request):
         Boss.save()
         payload = {'success': True, 'firstName' : Boss.firstName,
             'lastName' : Boss.lastName,  'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
-            'lat' : str(Boss.lat), 'lng' : str(Boss.lng), 'userID' : str(user.id), 'email' : user.email, 
+            'lat' : "{}".format(Boss.lat), 'lng' : "{}".format(Boss.lng), 'userID' : "{}".format(user.id), 'email' : user.email, 
             'username' : user.username}
         print("updateAllBossInputsForm, success,  returning - {}".format(payload))
     else:
         payload = {'success': True, 'Error' : 'no change', 'firstName' : Boss.firstName,
             'lastName' : Boss.lastName, 'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
-            'lat' : str(Boss.lat), 'lng' : str(Boss.lng), 'userID' : str(user.id), 'email' : user.email, 
+            'lat' : "{}".format(Boss.lat), 'lng' : "{}".format(Boss.lng), 'userID' : "{}".format(user.id), 'email' : user.email, 
             'username' : user.username}
         print("updateAllBossInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
     return JsonResponse(payload)
@@ -423,6 +569,29 @@ def updateInputForm(request):
     payload = {'success': True, 'firstName' : worker.firstName,
      'lastName' : worker.lastName, 'wage' : worker.wage, 'photoAGCSPath' : worker.photoAGCSPath}
     return JsonResponse(payload)
+
+@csrf_exempt
+
+def registerDevice(request):
+    print("registerDevice, start")
+    name = request.POST.get('name', "")
+    deviceType = request.POST.get('type', "")
+    reg_id = request.POST.get('token', None)
+    device_id = request.POST.get('id', None)
+    if reg_id is None or device_id is None:
+        print("registerDevice, missing reg_id or device_id")
+        return JsonResponse({'success': False, 'error':'missing reg_id or device_id'})
+    try:
+        device = FCMDevice.objects.get(user=request.user, device_id=device_id)
+    except Exception as e:
+        device = FCMDevice(user=request.user, device_id=device_id)
+    print("registerDevice, added device")
+    
+    device.registration_id = reg_id
+    device.type = deviceType
+    device.name = name
+    device.save()
+    return JsonResponse({'success': True})
 
 @csrf_exempt
 def updateOccupation(request):
@@ -544,6 +713,24 @@ def getFieldDetails(request):
     d = model_to_dict(worker)
     print("getFieldDetails {}".format(d))
     return JsonResponse(d)
+
+@csrf_exempt
+def getWorkerDetailsForID(request):
+    pretty_print_POST(request)
+    id = request.POST.get('id', None)
+    d={}
+    print("getWorkersDetailsForID for {}".format(request.user.username))
+    try:
+        worker = Workers.objects.get(pk=id)
+    except Exception as e:
+        print("getWorkersDetailsForID Faild {}".format(e))
+        return JsonResponse({'success':False})
+    print("getWorkersDetailsForID after getWorker")
+    d = model_to_dict(worker)
+    d['success']=True
+    print("getWorkersDetailsForID {}".format(d))
+    return JsonResponse(d)
+    
 @csrf_exempt
 def getBossFieldDetails(request):
     pretty_print_POST(request)
@@ -712,3 +899,51 @@ def LoadDBFromFile(request):
                 print("Exception - {}".format(e))
         return render(request, 'ShowWorkers.html')
     return render(request, 'ShowWorkers.html')
+
+def sendPushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{} {} עבודה מאת".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage+="\n{} בשכר של".format(job.wage)
+    bodyMessage+="\n{}ב".format(job.place)
+    messageID = str(uuid.uuid4())
+    body = {
+        "to" : device.registration_id,
+        "notification" : {        
+                "body" : bodyMessage,
+                "title" : "{} {}הצעת עבודה מ".format(job.bossID.firstName, job.bossID.lastName)
+        },
+        "priority": "high",
+        "data": {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "id": messageID,
+            "status": "done",
+            "firstName" : job.bossID.firstName,
+            "lastName" : job.bossID.lastName,
+            "wage" : job.wage,
+            "place" : job.place,
+            "jobID" : job.jobID,
+        },
+    }
+    headers = {
+        'Authorization': 'key=AAAAUyJvk20:APA91bHU-nH6dn5veHSzCMAyeyw3ewSMaaBSnbmCrbZvCm-E3WpMyKb-lHno1LrPi7-BJsk7Otdlho1LYj1XlTS2RmC2mry4i3zOnLUQmNZlhqCHK98AQMz3f7spuErcojd8lNN6CNCU',
+        'Content-Type': 'application/json; UTF-8',
+    }
+    #url = 'https://fcm.googleapis.com/v1/projects/zariz-204206/messages:send'
+    url = 'https://fcm.googleapis.com/fcm/send'
+    print("queryJob - {}".format(json.dumps(body)))
+    try:
+        #device.send_message(title="הצעת עבודה", body=bodyMessage, data={"test": "test"})
+        #r = requests.post(url, headers=headers);
+        
+        r = http.request('POST', url, headers=headers,body=json.dumps(body))
+        if ast.literal_eval(r.data)["success"]==1:
+            notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id)
+            notficationMessage.save()
+            print("queryJob, sent message to {}{}, device ID {}, {} ".format(w.firstName, w.lastName, device.device_id, bodyMessage))
+        else:
+            print("queryJob, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
+            notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id, status="failed")
+            notficationMessage.save()
+    except Exception as e:
+        print("queryJob, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
+        notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id, status="failed")
+        notficationMessage.save()

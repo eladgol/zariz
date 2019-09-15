@@ -1,0 +1,14 @@
+sudo nano /usr/local/etc/my.cnf
+remove # from innodb_force_recovery=4
+^X
+
+ mysqldump --user root -p --all-databases --add-drop-table > $HOME/mysql-dump.sql
+ rm -rf /usr/local/var/mysql/
+ mysqld --initialize --user=root
+ mysql -u root -p
+ >ALTER USER 'root'@'localhost' identified by 'LetMeIn123'
+ >create database ZarizDB;
+ >source /Users/admin/mysql-dump.sql;
+ >exit
+ 
+

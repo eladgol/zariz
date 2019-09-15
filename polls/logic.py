@@ -1,6 +1,6 @@
 #from firebase_admin import auth
 import logging
-from models import UserFirebaseDB, Workers, BusyEvent, Bosses, Jobs
+from models import UserFirebaseDB, Workers, BusyEvent, Bosses, Jobs, NotficationMessages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from urlparse import urlparse
@@ -10,6 +10,10 @@ import urllib
 import os
 from django.core.files import File
 from imageDownload import downloadImageToBuff
+import base64
+import uuid
+import json
+import ast
 #from accessGoogleCloudStorage import *
 def fbAuthenticate(userToken):
     try:
@@ -95,7 +99,7 @@ def createUser(request, localUser, localPassword, localEmail):
         payload['success'] = 'true' 
     else:
         payload['isNewUser'] = 'false'
-        payload['success'] = 'false' 
+        payload['success'] = 'true' 
     return payload
 
 def authenticateUser(request, localUser, localPassword):
@@ -116,7 +120,7 @@ def authenticateUser(request, localUser, localPassword):
 
 def getWorker(username):
     bCreateWorker =False
-    print("Start getWorker for {}".format(username))
+    #print("Start getWorker for {}".format(username))
     try:
         user = User.objects.get(username=username)
     except Exception as e:

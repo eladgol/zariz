@@ -16,7 +16,7 @@ print("After import Google App Engine has started, ready to attach the debugger"
 print(ptvsd.__file__)
 import random
 p = random.randint(40000, 50000)
-ip = '127.0.0.1'
+ip = '0.0.0.0'
 print("Enabling Attach on {}:{}".format(ip, p))
 ptvsd.enable_attach(address = (ip, p), redirect_output=True)
 #ptvsd.wait_for_attach()

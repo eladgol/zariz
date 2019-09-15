@@ -43,7 +43,7 @@ DEBUG = True
 # have ALLOWED_HOSTS = ['*'] when the app is deployed. If you deploy a Django
 # app not on App Engine, make sure to set an appropriate host here.
 # See https://docs.djangoproject.com/en/1.10/ref/settings/
-ALLOWED_HOSTS = ['*', ' 192.168.43.14', '192.168.1.13', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
+ALLOWED_HOSTS = ['*', '10.0.0.2', '192.168.0.126', '192.168.1.31', '192.168.1.20', '192.168.43.14', '10.0.0.18', '192.168.1.13', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
 
 # Application definition
 
@@ -55,8 +55,19 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'polls',
+    "fcm_django"
 )
 
+FCM_DJANGO_SETTINGS = {
+        "FCM_SERVER_KEY": "AAAAUyJvk20:APA91bHU-nH6dn5veHSzCMAyeyw3ewSMaaBSnbmCrbZvCm-E3WpMyKb-lHno1LrPi7-BJsk7Otdlho1LYj1XlTS2RmC2mry4i3zOnLUQmNZlhqCHK98AQMz3f7spuErcojd8lNN6CNCU",
+         # true if you want to have only one active device per registered user at a time
+         # default: False
+        "ONE_DEVICE_PER_USER": False,
+         # devices to which notifications cannot be sent,
+         # are deleted upon receiving error response from FCM
+         # default: False
+        "DELETE_INACTIVE_DEVICES": False,
+}
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

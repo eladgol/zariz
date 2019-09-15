@@ -16,9 +16,9 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 import django.contrib.auth.views
-from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm, updateAllBossInputsForm, deleteJobAsBoss
-from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss
-from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, getBossFieldDetails, ExportDB, LoadDBFromFile, occupationDetails
+from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm, updateAllBossInputsForm, deleteJobAsBoss, hire
+from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss, registerDevice
+from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, getBossFieldDetails, getWorkerDetailsForID, ExportDB, LoadDBFromFile, occupationDetails, queryJob, confirmJob
 import polls.forms
 from datetime import datetime
 urlpatterns = [
@@ -74,7 +74,12 @@ urlpatterns = [
     url(r'^LocationForm/', LocationForm, name='LocationForm'),
     url(r'^notifyTest/', notifyTest, name='notifyTest'),
     url(r'^dummy/', dummy, name='dummy'),
-    url(r'^getFieldDetails/', getFieldDetails, name='dummy'),
-    url(r'^getBossFieldDetails/', getBossFieldDetails, name='dummy'),
+    url(r'^getFieldDetails/', getFieldDetails, name='getFieldDetails'),
+    url(r'^getWorkerDetailsForID/', getWorkerDetailsForID, name='getWorkerDetailsForID'),
+    url(r'^getBossFieldDetails/', getBossFieldDetails, name='getBossFieldDetails'),
     url(r'^deleteJobAsBoss/', deleteJobAsBoss, name='deleteJobAsBoss'),
+    url(r'^queryJob', queryJob, name='queryJob'),
+    url(r'^confirmJob', confirmJob, name='confirmJob'),
+    url(r'^hire', hire, name='hire'),
+    url(r'^registerDevice', registerDevice, name='registerDevice'),
 ]

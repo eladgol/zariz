@@ -13,8 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
 import sys
+p=os.path.dirname(os.path.abspath(__file__))
+sys.path=["{}{}{}".format(p,os.sep,"lib")]+ sys.path
+print("sys.path = {}".format(sys.path))
 import ptvsd
 import random
 print(ptvsd.__version__)
@@ -22,7 +26,7 @@ p = random.randint(40000, 50000)
 ip = '127.0.0.1'
 print("Enabling Attach on {}:{}".format(ip, p))
 ptvsd.enable_attach(address = (ip, p), redirect_output=True)
-
+#ptvsd.wait_for_attach()
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 
