@@ -1,0 +1,4 @@
+First time -
+mysqld --initialize-insecure --basedir="C:\Users\Hoopo2\MySQL" --datadir="C:\Users\Hoopo2\MySQL\data" --console
+Then -
+mysqld --basedir="C:\Users\Hoopo2\MySQL" --datadir="C:\Users\Hoopo2\MySQL\data" --console

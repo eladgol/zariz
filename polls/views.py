@@ -245,6 +245,8 @@ def confirmJob(request):
     j=job.first()
     lResponded = [w for w in j.workerID_responded.all() if (w.userID == worker.userID)]
     lAccepted = [w for w in j.workerID_authorized.all() if (w.userID == worker.userID)]
+    lHired = [w for w in j.workerID_hired.all() if (w.userID == worker.userID)]
+    
     bAdded = False
     if len(lResponded)==0:
         j.workerID_responded.add(worker)
@@ -265,11 +267,18 @@ def confirmJob(request):
         else:
             if len(lAccepted)!=0:
                 j.workerID_authorized.remove(worker)
+                if len(lHired)!=0:
+                    j.workerID_hired.remove(worker)
                 j.save()
                 payload = JsonResponse({'success': True, 'Error' : 'changed to refused'})
                 bAdded = True
             else:
-                payload = JsonResponse({'success': True, 'Error' : 'refused'})
+                if len(lHired)!=0:
+                    j.workerID_hired.remove(worker)
+                    j.save()
+                    payload = JsonResponse({'success': True, 'Error' : 'changed to refused from hired'})
+                else:
+                    payload = JsonResponse({'success': True, 'Error' : 'refused'})
 
     print("confirmJob End, {}, worker {} {} to job {}, {} {}".format(payload.content, worker.firstName, worker.lastName, j.jobID, "updated to" if bAdded else "No change", "Accepted" if bAccepted else "Refused"))
     return payload
@@ -869,7 +878,7 @@ def notifyTest(request):
 
 @csrf_exempt
 def dummy(request):
-    return JsonResponse({});
+    return JsonResponse({})
 
 import pdb
 def ExportDB(request):
@@ -901,6 +910,7 @@ def LoadDBFromFile(request):
     return render(request, 'ShowWorkers.html')
 
 def sendPushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{}".format(job.discription)  
     bodyMessage="\n{} {} עבודה מאת".format(job.bossID.firstName, job.bossID.lastName)
     bodyMessage+="\n{} בשכר של".format(job.wage)
     bodyMessage+="\n{}ב".format(job.place)
@@ -921,6 +931,7 @@ def sendPushNotificationMessage(http, job, device, w):
             "wage" : job.wage,
             "place" : job.place,
             "jobID" : job.jobID,
+            "discription" : job.discription
         },
     }
     headers = {
