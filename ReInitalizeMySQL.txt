@@ -5,8 +5,9 @@ remove # from innodb_force_recovery=4
  mysqldump --user root -p --all-databases --add-drop-table > $HOME/mysql-dump.sql
  rm -rf /usr/local/var/mysql/
  mysqld --initialize --user=root
+ mysqld --user=root --console
  mysql -u root -p
- >ALTER USER 'root'@'localhost' identified by 'LetMeIn123'
+ >ALTER USER 'root'@'localhost' identified by 'LetMeIn123';
  >create database ZarizDB;
  >source /Users/admin/mysql-dump.sql;
  >exit

@@ -43,7 +43,7 @@ DEBUG = True
 # have ALLOWED_HOSTS = ['*'] when the app is deployed. If you deploy a Django
 # app not on App Engine, make sure to set an appropriate host here.
 # See https://docs.djangoproject.com/en/1.10/ref/settings/
-ALLOWED_HOSTS = ['*', '10.0.0.2', '192.168.0.126', '192.168.1.31', '192.168.1.20', '192.168.43.14', '10.0.0.18', '192.168.1.13', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
+ALLOWED_HOSTS = ['*', '10.0.0.2', '192.168.1.13', '192.168.0.126', '192.168.1.31', '192.168.1.20', '192.168.43.14', '10.0.0.18', '10.100.102.26', '192.168.43.230', '192.168.1.24', '10.0.0.17', '127.0.0.1']
 
 # Application definition
 
@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'polls',
     "fcm_django"
 )
@@ -69,6 +70,7 @@ FCM_DJANGO_SETTINGS = {
         "DELETE_INACTIVE_DEVICES": False,
 }
 MIDDLEWARE_CLASSES = (
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -78,7 +80,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
-
+CORS_ORIGIN_ALLOW_ALL = True
 ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [

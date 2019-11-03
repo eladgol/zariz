@@ -177,17 +177,20 @@ def queryJob(request):
     except Exception as e:
         print("queryJob - Failed no such job ID {}".format(jobID))
         return JsonResponse({'success': False, 'error' : 'no such jobID'})
-    try:
-        lWorkers = []
-        for w in Workers.objects.all():
-            #print("{}".format(w.occupationFieldListString))
-            print("{}".format(job.occupationFieldListString))
-            #print("{}".format(ast.literal_eval(w.occupationFieldListString)))
+    
+    dRet = queryWorkersForJob(job)
+    if not dRet["success"]:
+        return JsonResponse(dRet)
+
+    lWorkers=dRet["lWorkers"]
+    
+    payload['workers']=[model_to_dict(w) for w in lWorkers]
             
-            
-    except Exception as e:
-        print("queryJob - ERROR1 for job ID {}, {}".format(jobID, str(e)))
-        return JsonResponse({'success': False, 'error' : str(e)})
+    print("queryJob End, {}".format(payload))
+    job.save()
+    return JsonResponse(payload)
+
+def queryWorkersForJob(job):
     try:
         lWorkers = []
         for w in Workers.objects.all():
@@ -204,28 +207,51 @@ def queryJob(request):
                 lWorkers.append(w)
     except Exception as e:
         print("queryJob - Some error for job ID {}, {}".format(jobID, str(e)))
-        return JsonResponse({'success': False, 'error' : str(e)})
+        return {'success': False, 'error' : str(e)}
+    return {'success': True, 'lWorkers' : lWorkers}
 
-    
-    payload['workers']=[model_to_dict(w) for w in lWorkers]
-
+def SendHirePushNotifications(lWorkers, job):
     import urllib3
     http = urllib3.PoolManager()
     for w in lWorkers:
-        print("queryJob, device loop, worker {}, {}".format(w.firstName, w.lastName))
+        print("SendHirePushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
+        try:
+            devices=FCMDevice.objects.filter(user=w.userID)
+        except:
+            return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
+        
+        for device in devices:
+            print("SendHirePushNotifications, sending push notification to {}".format(device.registration_id))
+            sendHirePushNotificationMessage(http, job, device, w)            
+
+def SendFiredPushNotifications(lWorkers, job):
+    import urllib3
+    http = urllib3.PoolManager()
+    for w in lWorkers:
+        print("SendFiredPushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
+        try:
+            devices=FCMDevice.objects.filter(user=w.userID)
+        except:
+            return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
+        
+        for device in devices:
+            print("SendFiredPushNotifications, sending push notification to {}".format(device.registration_id))
+            sendFiredPushNotificationMessage(http, job, device, w)            
+
+def SendPushNotifications(lWorkers, job):
+    import urllib3
+    http = urllib3.PoolManager()
+    for w in lWorkers:
+        print("SendPushNotifications, device loop, worker {}, {}".format(w.firstName, w.lastName))
         try:
             devices=FCMDevice.objects.filter(user=w.userID)
         except:
             return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
         job.workerID_sentNotification.add(w)
         for device in devices:
-            print("queryJob, sending push notification to {}".format(device.registration_id))
-            sendPushNotificationMessage(http, job, device, w)            
-
-            
-    print("queryJob End, {}".format(payload))
-    job.save()
-    return JsonResponse(payload)
+            print("SendPushNotifications, sending push notification to {}".format(device.registration_id))
+            sendPushNotificationMessage(http, job, device, w)  
+    job.save()          
 
 @csrf_exempt
 def confirmJob(request):
@@ -286,24 +312,55 @@ def confirmJob(request):
 @csrf_exempt
 def hire(request):
     jobID = request.POST.get('jobID', None)
+    workerID = request.POST.get('workerID', None)
+    bHired = (request.POST.get('accepted', None)=='true') if request.POST.get('accepted', None) else False 
+    
     try:
-        worker = Workers.objects.get(userID=request.user.id)
+        worker = Workers.objects.get(userID=workerID)
     except Exception as e:
         print("hire  - Failed no such worker")
         return JsonResponse({"success" : False, "Error" : "no such Worker"}) 
     try:
         job = Jobs.objects.filter(jobID=jobID)
     except Exception as e:
-        print("confirmJob  - Failed no such job ID {}".format(jobID))
+        print("hire  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
-    j.workerID_hired.add(worker)
-    j.save()
+    
     payload = JsonResponse({"success" : True})
     lHired = [w for w in j.workerID_hired.all()]
-    print("hire End, {}, worker {} {} hired to job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, j.jobID, len(lHired)))
+    if bHired: 
+        SendHirePushNotifications([worker], j)
+    else:
+        SendFiredPushNotifications([worker], j)
+    print("hire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
     return payload
+@csrf_exempt
+def confirmHire(request):
+    jobID = request.POST.get('jobID', None)
+    workerID = request.POST.get('workerID', None)
+    bHired = (request.POST.get('accepted', None)=='true') if request.POST.get('accepted', None) else False 
+    try:
+        worker = Workers.objects.get(userID=workerID)
+    except Exception as e:
+        print("hire  - Failed no such worker")
+        return JsonResponse({"success" : False, "Error" : "no such Worker"}) 
+    try:
+        job = Jobs.objects.filter(jobID=jobID)
+    except Exception as e:
+        print("hire  - Failed no such job ID {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "no such JobID"})
+    j=job.first()
+    if bHired:     
+        j.workerID_hired.add(worker)      
+    else:
+        j.workerID_hired.remove(worker)
 
+    j.save()
+    payload = JsonResponse({"success" : True})
+    
+    print("confirmHire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
+    return payload
 @csrf_exempt
 def updateAllInputsForm(request):
     firstName = request.POST.get('firstName', None)
@@ -469,11 +526,27 @@ def updateJobAsBoss(request):
         Job.nWorkers = nWorkers
         Job.bossID=Boss
         Job.occupationFieldListString = occupationFieldListString
+        Job.workerID_responded.clear()
+        Job.workerID_authorized.clear()
+        Job.workerID_sentNotification.clear()
+        Job.workerID_hired.clear()
         Job.save()
+        
         
         payload = {'success': True, 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
             'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
         print("updateJobAsBoss - Saved Job, payload {}".format(payload))
+        dRet = queryWorkersForJob(Job)
+        if not dRet["success"]:
+            return JsonResponse(dRet)
+
+        lWorkers=dRet["lWorkers"]
+        try:
+            SendPushNotifications(lWorkers, Job)
+        except Exception as e:
+            print("updateJobAsBoss, exception on send push notitification - {}",format(e.message))
+            
+        
     else:
         payload = {'success': True, 'Error' : 'no change', 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
             'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
@@ -515,7 +588,7 @@ def updateAllBossInputsForm(request):
         Boss.lat = float(lat)
         bBossChanged = True
     if lng is not None and Boss.lng != lng:
-        Boss.lng = lng;
+        Boss.lng = lng
         bBossChanged = True    
     try:
         user = User.objects.get(username=request.user)
@@ -909,9 +982,9 @@ def LoadDBFromFile(request):
         return render(request, 'ShowWorkers.html')
     return render(request, 'ShowWorkers.html')
 
-def sendPushNotificationMessage(http, job, device, w):
+def sendFiredPushNotificationMessage(http, job, device, w):
     bodyMessage="\n{}".format(job.discription)  
-    bodyMessage="\n{} {} עבודה מאת".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage="\n{} {} הוחלט שלא להעסיק אותך! מאת ".format(job.bossID.firstName, job.bossID.lastName)
     bodyMessage+="\n{} בשכר של".format(job.wage)
     bodyMessage+="\n{}ב".format(job.place)
     messageID = str(uuid.uuid4())
@@ -919,7 +992,7 @@ def sendPushNotificationMessage(http, job, device, w):
         "to" : device.registration_id,
         "notification" : {        
                 "body" : bodyMessage,
-                "title" : "{} {}הצעת עבודה מ".format(job.bossID.firstName, job.bossID.lastName)
+                "title" : "{} {}הוחלט שלא להעסיק אותך! מ ".format(job.bossID.firstName, job.bossID.lastName)
         },
         "priority": "high",
         "data": {
@@ -930,17 +1003,79 @@ def sendPushNotificationMessage(http, job, device, w):
             "lastName" : job.bossID.lastName,
             "wage" : job.wage,
             "place" : job.place,
-            "jobID" : job.jobID,
-            "discription" : job.discription
+            "jobID" : str(job.jobID),
+            "discription" : job.discription,
+            "message_status" : "Fired",
+            "workerID" : str(w.userID.id),
         },
     }
+    sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w)
+
+def sendHirePushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{}".format(job.discription)  
+    bodyMessage="\n{} {} ברכות! התקבלת לעבודה מאת ".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage+="\n{} בשכר של".format(job.wage)
+    bodyMessage+="\n{}ב".format(job.place)
+    messageID = str(uuid.uuid4())
+    body = {
+        "to" : device.registration_id,
+        "notification" : {        
+                "body" : bodyMessage,
+                "title" : "{} {}ברכות! התקבלת לעבודה מ ".format(job.bossID.firstName, job.bossID.lastName)
+        },
+        "priority": "high",
+        "data": {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "id": messageID,
+            "status": "done",
+            "firstName" : job.bossID.firstName,
+            "lastName" : job.bossID.lastName,
+            "wage" : job.wage,
+            "place" : job.place,
+            "jobID" : str(job.jobID),
+            "discription" : job.discription,
+            "message_status" : "Hired",
+            "workerID" : str(w.userID.id),
+        },
+    }
+    sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w)
+
+def sendPushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{}".format(job.discription)  
+    bodyMessage="\n{} {} עבודה מאת".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage+="\n{} בשכר של".format(job.wage)
+    bodyMessage+="\n{}ב".format(job.place)
+    messageID = str(uuid.uuid4())
+    body = {
+        "to" : device.registration_id,
+        "notification" : {        
+                "body" : bodyMessage,
+                "title" : "{} {}הצעת עבודה מ ".format(job.bossID.firstName, job.bossID.lastName)
+        },
+        "priority": "high",
+        "data": {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "id": messageID,
+            "status": "done",
+            "firstName" : job.bossID.firstName,
+            "lastName" : job.bossID.lastName,
+            "wage" : job.wage,
+            "place" : job.place,
+            "jobID" : str(job.jobID),
+            "discription" : job.discription,
+            "message_status" : "Offer"
+        },
+    }
+    sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w)
+
+def sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w):
     headers = {
         'Authorization': 'key=AAAAUyJvk20:APA91bHU-nH6dn5veHSzCMAyeyw3ewSMaaBSnbmCrbZvCm-E3WpMyKb-lHno1LrPi7-BJsk7Otdlho1LYj1XlTS2RmC2mry4i3zOnLUQmNZlhqCHK98AQMz3f7spuErcojd8lNN6CNCU',
         'Content-Type': 'application/json; UTF-8',
     }
     #url = 'https://fcm.googleapis.com/v1/projects/zariz-204206/messages:send'
     url = 'https://fcm.googleapis.com/fcm/send'
-    print("queryJob - {}".format(json.dumps(body)))
+    print("sendPushNotificationMessageGeneral - {}".format(json.dumps(body)))
     try:
         #device.send_message(title="הצעת עבודה", body=bodyMessage, data={"test": "test"})
         #r = requests.post(url, headers=headers);
@@ -949,12 +1084,12 @@ def sendPushNotificationMessage(http, job, device, w):
         if ast.literal_eval(r.data)["success"]==1:
             notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id)
             notficationMessage.save()
-            print("queryJob, sent message to {}{}, device ID {}, {} ".format(w.firstName, w.lastName, device.device_id, bodyMessage))
+            print("sendPushNotificationMessageGeneral, sent message to {}{}, device ID {}, {} ".format(w.firstName, w.lastName, device.device_id, bodyMessage))
         else:
-            print("queryJob, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
+            print("sendPushNotificationMessageGeneral, Failed to sent message, no success returned, to {}{}, device ID {}, {} ".format( w.firstName, w.lastName, device.device_id, bodyMessage))
             notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id, status="failed")
             notficationMessage.save()
     except Exception as e:
-        print("queryJob, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
+        print("sendPushNotificationMessageGeneral, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
         notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id, status="failed")
         notficationMessage.save()
