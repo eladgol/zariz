@@ -17,7 +17,7 @@ from django.contrib import admin
 
 import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm, updateAllBossInputsForm, deleteJobAsBoss, hire,confirmHire
-from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss, registerDevice
+from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss, getAllJobsAsWorker, registerDevice
 from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, getBossFieldDetails, getWorkerDetailsForID, ExportDB, LoadDBFromFile, occupationDetails, queryJob, confirmJob
 import polls.forms
 from datetime import datetime
@@ -54,6 +54,7 @@ urlpatterns = [
     url(r'^localLogin/',localLogin, name='localLogin'),
     url(r'^signUp/',signUp, name='signUp'),
     url(r'^getAllJobsAsBoss/',getAllJobsAsBoss, name='getAllJobsAsBoss'),
+    url(r'^getAllJobsAsWorker/',getAllJobsAsWorker, name='getAllJobsAsWorker'),
     url(r'^testlocallogin/', django.contrib.auth.views.login,
     {
         'template_name': 'testlocallogin.html',
