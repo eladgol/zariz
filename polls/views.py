@@ -51,7 +51,7 @@ from django.core.files.storage import FileSystemStorage
 #from accessGoogleCloudStorage import *
 from ZarizSettings import *
 from django.views.decorators.csrf import csrf_exempt
-
+import logging
 
 from fcm_django.models import FCMDevice
 d = FCMDevice.objects.all()
@@ -75,7 +75,7 @@ def pretty_print_POST(req):
     this function because it is programmed to be pretty 
     printed and may differ from the actual request.
     """
-    # print('{}\n{}\n{}\n\n{}'.format(
+    # logging.info('{}\n{}\n{}\n\n{}'.format(
     #     '-----------START-----------',
     #     req.method + ' ' + req.url,
     #     '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
@@ -87,7 +87,7 @@ def pretty_print_POST(req):
 def index(request):
     #ptvsd.break_into_debugger()
     a = _("test")
-    print(a)
+    logging.info(a)
     #b = agcs_get()
     filename = "/bucket/test.txt"
     return django.contrib.auth.views.login(request,
@@ -152,7 +152,7 @@ def updateDates(request):
         try:
             a = BusyEvent.objects.filter(eventID=busyId)
         except Exception as e:
-            print(str(e))   
+            logging.info(str(e))   
         remove = {'start': busyDate, 'title':busyTitle,  'id' : busyId}
         a.delete()
     else:
@@ -175,7 +175,7 @@ def queryJob(request):
     try:
         job = Jobs.objects.get(jobID=jobID)
     except Exception as e:
-        print("queryJob - Failed no such job ID {}".format(jobID))
+        logging.info("queryJob - Failed no such job ID {}".format(jobID))
         return JsonResponse({'success': False, 'error' : 'no such jobID'})
     
     dRet = queryWorkersForJob(job)
@@ -186,7 +186,7 @@ def queryJob(request):
     
     payload['workers']=[model_to_dict(w) for w in lWorkers]
             
-    print("queryJob End, {}".format(payload))
+    logging.info("queryJob End, {}".format(payload))
     job.save()
     return JsonResponse(payload)
 
@@ -194,19 +194,19 @@ def queryWorkersForJob(job):
     try:
         lWorkers = []
         for w in Workers.objects.all():
-            print("queryJob - worker - {}, {}, {};".format(w.firstName, w.lastName, w.occupationFieldListString))
+            logging.info("queryJob - worker - {}, {}, {};".format(w.firstName, w.lastName, w.occupationFieldListString))
             if w.firstName=="":
-                print("queryJob - empty worker ignoring...")
+                logging.info("queryJob - empty worker ignoring...")
                 continue
             if job.occupationFieldListString in ast.literal_eval(w.occupationFieldListString):
                 #try:
                 #    job.workerID_sentNotification.get(pk=w.pk)
-                #    print("queryJob - Already added for {} {} to {}".format(w.firstName, w.lastName, jobID))
+                #    logging.info("queryJob - Already added for {} {} to {}".format(w.firstName, w.lastName, jobID))
                 #except Exception as e:
                 #    lWorkers.append(w)
                 lWorkers.append(w)
     except Exception as e:
-        print("queryJob - Some error for job ID {}, {}".format(jobID, str(e)))
+        logging.info("queryJob - Some error for job ID {}, {}".format(jobID, str(e)))
         return {'success': False, 'error' : str(e)}
     return {'success': True, 'lWorkers' : lWorkers}
 
@@ -214,56 +214,56 @@ def SendHirePushNotifications(lWorkers, job):
     import urllib3
     http = urllib3.PoolManager()
     for w in lWorkers:
-        print("SendHirePushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
+        logging.info("SendHirePushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
         try:
             devices=FCMDevice.objects.filter(user=w.userID)
         except:
             return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
         
         for device in devices:
-            print("SendHirePushNotifications, sending push notification to {}".format(device.registration_id))
+            logging.info("SendHirePushNotifications, sending push notification to {}".format(device.registration_id))
             sendHirePushNotificationMessage(http, job, device, w)            
 
 def SendFiredPushNotifications(lWorkers, job):
     import urllib3
     http = urllib3.PoolManager()
     for w in lWorkers:
-        print("SendFiredPushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
+        logging.info("SendFiredPushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
         try:
             devices=FCMDevice.objects.filter(user=w.userID)
         except:
             return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
         
         for device in devices:
-            print("SendFiredPushNotifications, sending push notification to {}".format(device.registration_id))
+            logging.info("SendFiredPushNotifications, sending push notification to {}".format(device.registration_id))
             sendFiredPushNotificationMessage(http, job, device, w)       
                  
 def SendResignPushNotifications(lBosses, job):
     import urllib3
     http = urllib3.PoolManager()
     for b in lBosses:
-        print("SendResignPushNotifications,  boss {}, {}".format(b.firstName, b.lastName))
+        logging.info("SendResignPushNotifications,  boss {}, {}".format(b.firstName, b.lastName))
         try:
             devices=FCMDevice.objects.filter(user=b.userID)
         except:
             return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
         
         for device in devices:
-            print("SendResignPushNotifications, sending push notification to {}".format(device.registration_id))
+            logging.info("SendResignPushNotifications, sending push notification to {}".format(device.registration_id))
             sendResignedPushNotificationMessage(http, job, device, None)
 
 def SendPushNotifications(lWorkers, job):
     import urllib3
     http = urllib3.PoolManager()
     for w in lWorkers:
-        print("SendPushNotifications, device loop, worker {}, {}".format(w.firstName, w.lastName))
+        logging.info("SendPushNotifications, device loop, worker {}, {}".format(w.firstName, w.lastName))
         try:
             devices=FCMDevice.objects.filter(user=w.userID)
         except:
             return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
         job.workerID_sentNotification.add(w)
         for device in devices:
-            print("SendPushNotifications, sending push notification to {}".format(device.registration_id))
+            logging.info("SendPushNotifications, sending push notification to {}".format(device.registration_id))
             sendPushNotificationMessage(http, job, device, w)  
     job.save()          
 
@@ -275,12 +275,12 @@ def confirmJob(request):
     try:
         worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
-        print("confirmJob  - Failed no such worker")
+        logging.info("confirmJob  - Failed no such worker")
         return JsonResponse({"success" : False, "Error" : "no such Worker"})
     try:
         job = Jobs.objects.filter(jobID=jobID)
     except Exception as e:
-        print("confirmJob  - Failed no such job ID {}".format(jobID))
+        logging.info("confirmJob  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
     lResponded = [w for w in j.workerID_responded.all() if (w.userID == worker.userID)]
@@ -327,7 +327,7 @@ def confirmJob(request):
                     payload = JsonResponse({'success': True, 'Error' : 'refused'})
                  
 
-    print("confirmJob End, {}, worker {} {} to job {}, {} {}".format(payload.content, worker.firstName, worker.lastName, j.jobID, "updated to" if bAdded else "No change", "Accepted" if bAccepted else "Refused"))
+    logging.info("confirmJob End, {}, worker {} {} to job {}, {} {}".format(payload.content, worker.firstName, worker.lastName, j.jobID, "updated to" if bAdded else "No change", "Accepted" if bAccepted else "Refused"))
     return payload
 
 @csrf_exempt
@@ -339,12 +339,12 @@ def hire(request):
     try:
         worker = Workers.objects.get(userID=workerID)
     except Exception as e:
-        print("hire  - Failed no such worker")
+        logging.info("hire  - Failed no such worker")
         return JsonResponse({"success" : False, "Error" : "no such Worker"}) 
     try:
         job = Jobs.objects.filter(jobID=jobID)
     except Exception as e:
-        print("hire  - Failed no such job ID {}".format(jobID))
+        logging.info("hire  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
     
@@ -354,7 +354,7 @@ def hire(request):
         SendHirePushNotifications([worker], j)
     else:
         SendFiredPushNotifications([worker], j)
-    print("hire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
+    logging.info("hire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
     return payload
 @csrf_exempt
 def confirmHire(request):
@@ -364,12 +364,12 @@ def confirmHire(request):
     try:
         worker = Workers.objects.get(userID=workerID)
     except Exception as e:
-        print("hire  - Failed no such worker")
+        logging.info("hire  - Failed no such worker")
         return JsonResponse({"success" : False, "Error" : "no such Worker"}) 
     try:
         job = Jobs.objects.filter(jobID=jobID)
     except Exception as e:
-        print("hire  - Failed no such job ID {}".format(jobID))
+        logging.info("hire  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
     if bHired:     
@@ -381,7 +381,7 @@ def confirmHire(request):
     j.save()
     payload = JsonResponse({"success" : True})
     
-    print("confirmHire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
+    logging.info("confirmHire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
     return payload
 @csrf_exempt
 def updateAllInputsForm(request):
@@ -400,27 +400,27 @@ def updateAllInputsForm(request):
     except Exception as e:
         worker = Workers(userID=request.user.id)
     bWorkerChanged = False
-    # if photoAGCSPath is not None and photoAGCSPath != worker.photoAGCSPath:
-    #     splitVal = photoAGCSPath.split(',')
-    #     base64Val = splitVal[1]
-    #     header64 = splitVal[0]
-    #     file_ext = 'unknown'
-    #     if 'jpeg' in header64:
-    #         file_ext = 'jpeg'
-    #     if 'jpg' in header64:
-    #         file_ext = 'jpg'
-    #     elif 'gif' in header64:
-    #         file_ext = 'gif'
-    #     elif 'png' in header64:
-    #         file_ext = 'png'
-    #     else:
-    #         file_ext = header64[len(u'data:image/'):]
+    if photoAGCSPath is not None and photoAGCSPath != worker.photoAGCSPath:
+        splitVal = photoAGCSPath.split(',')
+        base64Val = splitVal[1]
+        header64 = splitVal[0]
+        file_ext = 'unknown'
+        if 'jpeg' in header64:
+            file_ext = 'jpeg'
+        if 'jpg' in header64:
+            file_ext = 'jpg'
+        elif 'gif' in header64:
+            file_ext = 'gif'
+        elif 'png' in header64:
+            file_ext = 'png'
+        else:
+            file_ext = header64[len(u'data:image/'):]
 
-    #     buff = base64.b64decode(base64Val)
+        buff = base64.b64decode(base64Val)
 
-    #     sFileName = 'profile_pic_{}_{}_.{}'.format(request.user.username, time.time(), file_ext)
-    #     worker.photoAGCSPath = uploadBlob(sFileName, buff, header64)
-    #     bWorkerChanged = True
+        sFileName = 'profile_pic_{}_{}_.{}'.format(request.user.username, time.time(), file_ext)
+        worker.photoAGCSPath = uploadBlob(sFileName, buff, header64)
+        bWorkerChanged = True
     if firstName is not None and worker.firstName != firstName:
         worker.firstName = firstName
         bWorkerChanged = True
@@ -448,7 +448,7 @@ def updateAllInputsForm(request):
     try:
         user = User.objects.get(username=request.user)
     except Exception as e:
-        print("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
+        logging.info("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
         return JsonResponse({"success" : False})
     
     if bWorkerChanged:
@@ -457,13 +457,13 @@ def updateAllInputsForm(request):
             'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
             'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
             'username' : user.username, 'lOccupationFieldListString' : str(worker.occupationFieldListString)}
-        print("updateAllInputsForm, success,  returning - {}".format(payload))
+        logging.info("updateAllInputsForm, success,  returning - {}".format(payload))
     else:
         payload = {'success': True, 'Error' : 'no change', 'firstName' : worker.firstName,
             'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
             'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
             'username' : user.username, 'lOccupationFieldListString' : str(worker.occupationFieldListString)}
-        print("updateAllInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
+        logging.info("updateAllInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
     return JsonResponse(payload)
 
 @csrf_exempt
@@ -537,9 +537,9 @@ def deleteJobAsBoss(request):
     try:
         job = Jobs.objects.get(jobID=jobID).delete()
     except Exception as e:
-        print("deleteJobAsBoss - Failed no such job ID {}".format(jobID))
+        logging.info("deleteJobAsBoss - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
-    print("deleteJobAsBoss - Deleted job ID {}".format(jobID))
+    logging.info("deleteJobAsBoss - Deleted job ID {}".format(jobID))
     return JsonResponse({'success': True})
     
 @csrf_exempt
@@ -554,7 +554,7 @@ def updateJobAsBoss(request):
     occupationFieldListString = request.POST.get('lOccupationFieldListString', '') # toDo: change to support multiple occupations per Job
     bNewJob = False
     jobID = request.POST.get('jobID', None)
-    print("updateJobAsBoss - jobID {}, discription - {}, place {}, lat {}, lng {}, wage {}, occupationFieldListString {}".
+    logging.info("updateJobAsBoss - jobID {}, discription - {}, place {}, lat {}, lng {}, wage {}, occupationFieldListString {}".
             format(jobID, discription, place, lat, lng, wage, occupationFieldListString))
             
     try:
@@ -565,16 +565,16 @@ def updateJobAsBoss(request):
     if jobID == '-1':
         Job = Jobs(bossID=Boss)
         bNewJob = True
-        print("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
+        logging.info("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
     else:
         try:
             Job = Jobs.objects.get(jobID=jobID, bossID=Boss)
             bNewJob = False
-            print("updateJobAsBoss - Existing job id - {}".format(Job.jobID))
+            logging.info("updateJobAsBoss - Existing job id - {}".format(Job.jobID))
         except Exception as e2:
             Job = Jobs(bossID=Boss)
             bNewJob = True
-            print("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
+            logging.info("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
     
     if (bNewJob or [Job.discription, Job.place, Job.lat, Job.lng, Job.wage, Job.nWorkers, Job.occupationFieldListString] 
         != [discription, place, lat, lng, wage, nWorkers, occupationFieldListString]):
@@ -595,7 +595,7 @@ def updateJobAsBoss(request):
         
         payload = {'success': True, 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
             'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
-        print("updateJobAsBoss - Saved Job, payload {}".format(payload))
+        logging.info("updateJobAsBoss - Saved Job, payload {}".format(payload))
         dRet = queryWorkersForJob(Job)
         if not dRet["success"]:
             return JsonResponse(dRet)
@@ -604,13 +604,13 @@ def updateJobAsBoss(request):
         try:
             SendPushNotifications(lWorkers, Job)
         except Exception as e:
-            print("updateJobAsBoss, exception on send push notitification - {}",format(e.message))
+            logging.info("updateJobAsBoss, exception on send push notitification - {}",format(e.message))
             
         
     else:
         payload = {'success': True, 'Error' : 'no change', 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
             'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
-        print("updateJobAsBoss - No change, payload {}".format(payload))
+        logging.info("updateJobAsBoss - No change, payload {}".format(payload))
     return JsonResponse(payload)
 
 @csrf_exempt
@@ -653,7 +653,7 @@ def updateAllBossInputsForm(request):
     try:
         user = User.objects.get(username=request.user)
     except Exception as e:
-        print("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
+        logging.info("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
         return JsonResponse({"sucess" : False})
         
     if bBossChanged:
@@ -662,13 +662,13 @@ def updateAllBossInputsForm(request):
             'lastName' : Boss.lastName,  'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
             'lat' : "{}".format(Boss.lat), 'lng' : "{}".format(Boss.lng), 'userID' : "{}".format(user.id), 'email' : user.email, 
             'username' : user.username}
-        print("updateAllBossInputsForm, success,  returning - {}".format(payload))
+        logging.info("updateAllBossInputsForm, success,  returning - {}".format(payload))
     else:
         payload = {'success': True, 'Error' : 'no change', 'firstName' : Boss.firstName,
             'lastName' : Boss.lastName, 'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
             'lat' : "{}".format(Boss.lat), 'lng' : "{}".format(Boss.lng), 'userID' : "{}".format(user.id), 'email' : user.email, 
             'username' : user.username}
-        print("updateAllBossInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
+        logging.info("updateAllBossInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
     return JsonResponse(payload)
 
 
@@ -715,19 +715,19 @@ def updateInputForm(request):
 @csrf_exempt
 
 def registerDevice(request):
-    print("registerDevice, start")
+    logging.info("registerDevice, start")
     name = request.POST.get('name', "")
     deviceType = request.POST.get('type', "")
     reg_id = request.POST.get('token', None)
     device_id = request.POST.get('id', None)
     if reg_id is None or device_id is None:
-        print("registerDevice, missing reg_id or device_id")
+        logging.info("registerDevice, missing reg_id or device_id")
         return JsonResponse({'success': False, 'error':'missing reg_id or device_id'})
     try:
         device = FCMDevice.objects.get(user=request.user, device_id=device_id)
     except Exception as e:
         device = FCMDevice(user=request.user, device_id=device_id)
-    print("registerDevice, added device")
+    logging.info("registerDevice, added device")
     
     device.registration_id = reg_id
     device.type = deviceType
@@ -738,7 +738,7 @@ def registerDevice(request):
 @csrf_exempt
 def updateOccupation(request):
     occupaitonList = request.POST.getlist('occupationList[]', None)
-    print(occupaitonList)
+    logging.info(occupaitonList)
     # does user exist
     try:
         worker = Workers.objects.get(userID=request.user.id)
@@ -759,14 +759,15 @@ def localLogin(request):
         payload['redirectUrl'] = 'accounts/profile/'
         worker = getWorker(request.user.username)
         if worker.photoAGCSPath is '' and 'photoURL' in payload and payload['photoURL']!='':
-            print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+            logging.info('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
             downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
-    print("Login payload result {} for {}, {}".format(payload, localUser, request.user.username))
+    logging.info("Login payload result {} for {}, {}".format(payload, localUser, request.user.username))
     return JsonResponse(payload)
 
 @csrf_exempt
 def signUp(request):
     pretty_print_POST(request)
+    logging.info("Hello!!!!!!")
     localUser = request.POST.get('localUser', None)
     localPassword = request.POST.get('localPassword', None)
     localEmail = request.POST.get('localEmail', None)
@@ -776,7 +777,7 @@ def signUp(request):
         worker = getWorker(request.user.username)
         if worker is not None:
             if worker.photoAGCSPath is '' and 'photoURL' in payload and payload['photoURL']!='':
-                print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+                logging.info('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
                 downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
 
     return JsonResponse(payload)
@@ -789,7 +790,7 @@ def firebaseSuccess(request):
         return JsonResponse(payload)
 
     userEmail = payload['userEmail'] 
-    print('email - {}, token - {}'.format(userEmail, userToken)) 
+    logging.info('email - {}, token - {}'.format(userEmail, userToken)) 
 
     fbUser = updateFireBaseDB(userEmail)
 
@@ -801,7 +802,7 @@ def firebaseSuccess(request):
 
     worker = getWorker(request.user.username)
     if worker.photoAGCSPath is '' and payload['photoURL']!='':
-        print('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
+        logging.info('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
         downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
 
 
@@ -839,7 +840,7 @@ def carousel(request):
             d['photoAGCSPath'] = 'https://storage.googleapis.com/zariz-204206.appspot.com/BlankProfile.png'
             
     except Exception as e:
-        print(e.message)
+        logging.info(e.message)
     return render(
         request,
         'Carousel.html',
@@ -849,11 +850,11 @@ def carousel(request):
 @csrf_exempt
 def getFieldDetails(request):
     pretty_print_POST(request)
-    print("getFieldDetails for {}".format(request.user.username))
+    logging.info("getFieldDetails for {}".format(request.user.username))
     worker = getWorker(request.user.username)
-    print("getFieldDetails after getWorker")
+    logging.info("getFieldDetails after getWorker")
     d = model_to_dict(worker)
-    print("getFieldDetails {}".format(d))
+    logging.info("getFieldDetails {}".format(d))
     return JsonResponse(d)
 
 @csrf_exempt
@@ -861,26 +862,26 @@ def getWorkerDetailsForID(request):
     pretty_print_POST(request)
     id = request.POST.get('id', None)
     d={}
-    print("getWorkersDetailsForID for {}".format(request.user.username))
+    logging.info("getWorkersDetailsForID for {}".format(request.user.username))
     try:
         worker = Workers.objects.get(pk=id)
     except Exception as e:
-        print("getWorkersDetailsForID Faild {}".format(e))
+        logging.info("getWorkersDetailsForID Faild {}".format(e))
         return JsonResponse({'success':False})
-    print("getWorkersDetailsForID after getWorker")
+    logging.info("getWorkersDetailsForID after getWorker")
     d = model_to_dict(worker)
     d['success']=True
-    print("getWorkersDetailsForID {}".format(d))
+    logging.info("getWorkersDetailsForID {}".format(d))
     return JsonResponse(d)
     
 @csrf_exempt
 def getBossFieldDetails(request):
     pretty_print_POST(request)
-    print("getBossFieldDetails for {}".format(request.user.username))
+    logging.info("getBossFieldDetails for {}".format(request.user.username))
     Boss = getBoss(request.user.username)
-    print("getBossFieldDetails after getBoss")
+    logging.info("getBossFieldDetails after getBoss")
     d = model_to_dict(Boss)
-    print("getBossFieldDetails {}".format(d))
+    logging.info("getBossFieldDetails {}".format(d))
     return JsonResponse(d)
 
 @csrf_exempt   
@@ -916,12 +917,12 @@ def occupationPage(request):
     )
 @csrf_exempt
 def occupationDetails(request):
-    print("occupationDetails, Start")
+    logging.info("occupationDetails, Start")
     possibleFields, pickedFields = getOccupationDetails(request)
     # if (len(pickedFields) != len(occupaitonList))
     #     worker.occupationFieldListString = str(pickedFields)
     j = JsonResponse({'success' : True, 'possibleFields' : str(possibleFields), 'pickedFields' : str(pickedFields)})
-    print("occupationDetails, Returning {}".format(j))
+    logging.info("occupationDetails, Returning {}".format(j))
     return j
     
 
@@ -932,7 +933,7 @@ def calander2(request):
         busyEvents = BusyEvent.objects.filter(userID=request.user.id)
         busyDates = [(d.start_date.strftime('%Y-%m-%d'), d.notes) for d in busyEvents]
     except Exception as e:
-        print(e.message)
+        logging.info(e.message)
     return render(
         request,
         'FullCalanderPick.html',
@@ -946,7 +947,7 @@ def calander(request):
     # try:
     #     worker = Workers.objects.get(localUser=request.user.username)
     # except Exception as e:
-    #     print("Error")
+    #     logging.info("Error")
     #     return JsonResponse({'error' : True})
     
     busyDates = []
@@ -1015,7 +1016,7 @@ def dummy(request):
 
 import pdb
 def ExportDB(request):
-    print("Hello")
+    logging.info("Hello")
     dataWorkers = str([str(w) for w in Workers.objects.values()])
     dataUsers = str([str(u) for u in User.objects.values()])
     data = str({'Workers' : dataWorkers, 'Users' : dataUsers})
@@ -1038,7 +1039,7 @@ def LoadDBFromFile(request):
                 for w in workerList:
                     pass                   
             except Exception as e:
-                print("Exception - {}".format(e))
+                logging.info("Exception - {}".format(e))
         return render(request, 'ShowWorkers.html')
     return render(request, 'ShowWorkers.html')
 
@@ -1169,7 +1170,7 @@ def sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w):
     }
     #url = 'https://fcm.googleapis.com/v1/projects/zariz-204206/messages:send'
     url = 'https://fcm.googleapis.com/fcm/send'
-    print("sendPushNotificationMessageGeneral - {}".format(json.dumps(body)))
+    logging.info("sendPushNotificationMessageGeneral - {}".format(json.dumps(body)))
     try:
         #device.send_message(title="הצעת עבודה", body=bodyMessage, data={"test": "test"})
         #r = requests.post(url, headers=headers);
@@ -1179,12 +1180,12 @@ def sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w):
             if ast.literal_eval(r.data)["success"]==1:
                 notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id)
                 notficationMessage.save()
-                print("sendPushNotificationMessageGeneral, sent message to {}{}, device ID {}, {} ".format(w.firstName, w.lastName, device.device_id, bodyMessage))
+                logging.info("sendPushNotificationMessageGeneral, sent message to {}{}, device ID {}, {} ".format(w.firstName, w.lastName, device.device_id, bodyMessage))
             else:
-                print("sendPushNotificationMessageGeneral, Failed to sent message, no success returned, to {}{}, device ID {}, {} ".format( w.firstName, w.lastName, device.device_id, bodyMessage))
+                logging.info("sendPushNotificationMessageGeneral, Failed to sent message, no success returned, to {}{}, device ID {}, {} ".format( w.firstName, w.lastName, device.device_id, bodyMessage))
                 notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id, status="failed")
                 notficationMessage.save()
     except Exception as e:
-        print("sendPushNotificationMessageGeneral, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
+        logging.info("sendPushNotificationMessageGeneral, Failed to sent message, error - {}, to {}{}, device ID {}, {} ".format(e, w.firstName, w.lastName, device.device_id, bodyMessage))
         notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id, status="failed")
         notficationMessage.save()
