@@ -1,8 +1,11 @@
 sudo nano /usr/local/etc/my.cnf
 remove # from innodb_force_recovery=4
 ^X
+mysqld --user=root --console
+ mysqldump --user root -pLetMeIn123 --all-databases --add-drop-table > $HOME/mysql-dump.sql
 
- mysqldump --user root -p --all-databases --add-drop-table > $HOME/mysql-dump.sql
+ sudo nano /usr/local/etc/my.cnf
+ insert back # before innodb_force_recovery=4
  rm -rf /usr/local/var/mysql/
  mysqld --initialize --user=root
  mysqld --user=root --console
@@ -13,3 +16,4 @@ remove # from innodb_force_recovery=4
  >exit
  
 
+ 

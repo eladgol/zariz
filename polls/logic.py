@@ -1,20 +1,21 @@
 #from firebase_admin import auth
 import logging
-from models import UserFirebaseDB, Workers, BusyEvent, Bosses, Jobs, NotficationMessages
+from polls.models import UserFirebaseDB, Workers, BusyEvent, Bosses, Jobs, NotficationMessages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
-from urlparse import urlparse
+from urllib.parse  import urlparse
 from os.path import splitext, basename
 import time
 import urllib
 import os
 from django.core.files import File
-from imageDownload import downloadImageToBuff
+from polls.imageDownload import downloadImageToBuff
 import base64
 import uuid
 import json
 import ast
-#from accessGoogleCloudStorage import *
+#from google.cloud import storage
+from polls.accessGoogleCloudStorage import *
 def fbAuthenticate(userToken):
     try:
         decodedToken = auth.verify_id_token(userToken)

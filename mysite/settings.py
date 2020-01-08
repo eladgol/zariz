@@ -111,11 +111,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Environment, MySQLdb will be used.
 import sys
 sys.path.append(os.getcwd() + os.sep + 'lib')
-try:
-    import MySQLdb  # noqa: F401
-except ImportError:
-    import pymysql
-    pymysql.install_as_MySQLdb()
+#try:
+   # import MySQLdb  # noqa: F401
+#except ImportError:
+   # import pymysql
+  #  pymysql.install_as_MySQLdb()
 
 # [START db_setup]
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
@@ -152,11 +152,15 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '127.0.0.1',
+            'HOST': 'localhost',
             'PORT': '3306',
             'NAME': 'ZarizDB',
-            'USER': 'root',
+            'USER': 'elad',
             'PASSWORD': 'LetMeIn123',
+    
+
+  #  		'USER': 'elad',
+  #          'PASSWORD': '',
         }
     }
 

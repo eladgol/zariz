@@ -1,4 +1,4 @@
-runtime: python27
+runtime: python37
 api_version: 1
 threadsafe: yes
 
@@ -13,11 +13,12 @@ handlers:
 # Python libraries that use C extensions can
 # only be included if they are part of the App Engine SDK 
 # Using Third Party Libraries: https://cloud.google.com/appengine/docs/python/tools/using-libraries-python-27
-libraries:
-- name: MySQLdb
-  version: 1.2.5
-- name: ssl
-  version: latest
+# libraries:
+# - name: MySQLdb
+#   version: 1.2.5
+# - name: ssl
+#   version: latest
+
 
 # [END django_app]
 

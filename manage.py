@@ -17,15 +17,21 @@
 import os
 import sys
 p=os.path.dirname(os.path.abspath(__file__))
-sys.path=["{}{}{}".format(p,os.sep,"lib")]+ sys.path
+sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
+#sys.path=['/Users/admin/Projects/zariz_37/venv/lib/python3.7/site-packages', '/Users/admin/Projects/zariz_37/lib','/Users/admin/Projects/zariz_37', '/Users/admin/Projects/zariz_37/lib','/Users/admin/Projects/zariz_37/polls','/Users/admin/Projects/zariz_37/mysite', '/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7','/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/lib-dynload']
 print("sys.path = {}".format(sys.path))
-import ptvsd
+print("sys.version = {}".format(sys.version))
+print("sys.executable = {}".format(sys.executable))
+import logging
+logging.basicConfig(level=logging.INFO)
 import random
-print(ptvsd.__version__)
+#import ptvsd
+#print(ptvsd.__version__)
+#print(ptvsd.__file__)
 p = random.randint(40000, 50000)
 ip = '127.0.0.1'
-print("Enabling Attach on {}:{}".format(ip, p))
-ptvsd.enable_attach(address = (ip, p), redirect_output=True)
+#print("Enabling Attach on {}:{}".format(ip, p))
+#ptvsd.enable_attach(address = (ip, p), redirect_output=True)
 #ptvsd.wait_for_attach()
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")

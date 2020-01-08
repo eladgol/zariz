@@ -19,6 +19,7 @@ import django.contrib.auth.views
 from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm, updateAllBossInputsForm, deleteJobAsBoss, hire,confirmHire
 from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss, getAllJobsAsWorker, registerDevice
 from polls.views import demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, getBossFieldDetails, getWorkerDetailsForID, ExportDB, LoadDBFromFile, occupationDetails, queryJob, confirmJob
+#from polls.views import firebaseSuccess
 import polls.forms
 from datetime import datetime
 urlpatterns = [

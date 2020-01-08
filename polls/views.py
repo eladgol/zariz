@@ -17,8 +17,8 @@ from __future__ import unicode_literals
 ########################################################################
 # this is required for firebase backend to work  -
 #  according to - https://stackoverflow.com/questions/9604799/can-python-requests-library-be-used-on-google-app-engine/28544823#28544823
-from requests_toolbelt.adapters import appengine
-appengine.monkeypatch()
+#from requests_toolbelt.adapters import appengine
+#appengine.monkeypatch()
 ##################################################################
 import ast
 import codecs
@@ -36,15 +36,17 @@ from django.contrib.auth.models import User
 import django.contrib.auth
 import django.contrib.auth.views
 from django.contrib.auth.decorators import login_required
-import urllib2
+#import urllib2
 from django.template import loader
 from django.utils.translation import gettext as _
 from django.forms.models import model_to_dict
 
 from polls.forms import BootstrapAuthenticationForm
 from datetime import datetime
+import sys
+sys.path.append(os.path.dirname(__file__))
 from logic import *
-from models import UserFirebaseDB, Workers, BusyEvent, NotficationMessages
+from polls.models import UserFirebaseDB, Workers, BusyEvent, NotficationMessages
 from django.utils import timezone
 from django.core import serializers
 from django.core.files.storage import FileSystemStorage
@@ -890,11 +892,11 @@ def getOccupationDetails(request):
     #sData = codecs.open(os.path.dirname(__file__) + '/../'+ 'static/content/zarizSettings.json', encoding='utf-8').read()
     #data = ast.literal_eval(sData)
     sPossibleFields = ZarizSettingsDict['occupationFields']
-    possibleFields = [s.decode('utf-8') for s in sPossibleFields]
+    possibleFields = [s for s in sPossibleFields]
     pickedFields = []
     try:
         worker = Workers.objects.get(userID=request.user.id)
-        occupaitonList = ast.literal_eval(worker.occupationFieldListString)
+        occupaitonList = ast.literal_eval(worker.occupationFieldListString) if worker.occupationFieldListString!='' else []
         pickedFields = [s for s in occupaitonList if s in possibleFields]
     except Exception as e:
         pass
@@ -1177,7 +1179,8 @@ def sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w):
         
         r = http.request('POST', url, headers=headers,body=json.dumps(body))
         if w is not None:   
-            if ast.literal_eval(r.data)["success"]==1:
+            #if ast.literal_eval(r.data)["success"]==1:
+            if ast.literal_eval(str(str(r.data)[2:-1]))["success"]==1:
                 notficationMessage = NotficationMessages(JobID=job, workerID=w, to=device.registration_id)
                 notficationMessage.save()
                 logging.info("sendPushNotificationMessageGeneral, sent message to {}{}, device ID {}, {} ".format(w.firstName, w.lastName, device.device_id, bodyMessage))

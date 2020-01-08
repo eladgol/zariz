@@ -97,10 +97,11 @@ class ListField(models.CharField):
         return ast.literal_eval(value)
 
     def get_prep_value(self, value):
-        if value is None:
-            return value
+        #if value is None:
+        #    return value
 
-        return unicode(value)
+        #return unicode(value)
+        return value
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return value

@@ -2,8 +2,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "python",
+            "label": "Python: Current File",
             "command": "python",
+            "type": "process",
+            "args": ["${file}"]
+        },
+        {
+            "label": "python",
+            "command": "/Users/admin/Projects/zariz_37/venv/bin/python3",
             "type": "process",
             "args": [
                 "/Users/admin/Downloads/google-cloud-sdk/bin/dev_appserver.py",
@@ -11,9 +17,10 @@
                 "--automatic_restart=no",
                 "--max_module_instances=default:1",
                 "--threadsafe_override=default:false",
-                "--host=10.0.0.2",
+                "--host=192.168.1.13",
                 "--default_gcs_bucket_name=zariz-204206",
-                "${workspaceFolder}/app.yaml"
+                "${workspaceFolder}/app.yaml",
+                "--support_datastore_emulator=False",
             ],
             "group": {
                 "kind": "build",
@@ -23,7 +30,7 @@
         },
         {
             "label": "python2",
-            "command": "python",
+            "command": "python3",
             "type": "process",
             "args": [
                 "manage.py",
@@ -37,6 +44,11 @@
                 "isDefault": true
             },
             "problemMatcher": []
-        }
+        },
+        {
+            "label": "echo",
+            "type": "shell",
+            "command": "echo ${workspaceFolder}"
+          }
     ]
 }
