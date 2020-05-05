@@ -51,7 +51,7 @@ class Bosses(models.Model):
     place = models.CharField(max_length=200, default = "")
     lat = models.FloatField(default=0.0)
     lng = models.FloatField(default=0.0)
-    userID = models.OneToOneField(User)
+    userID = models.OneToOneField(User, on_delete=models.CASCADE)
     bossID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
     
 class Jobs(models.Model):
@@ -64,7 +64,7 @@ class Jobs(models.Model):
     lng = models.FloatField(default=0.0)
     jobID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
     workerID_responded = models.ManyToManyField(Workers, related_name="workerID_responded")
-    bossID = models.ForeignKey(Bosses, db_column="userID", null=True)
+    bossID = models.ForeignKey(Bosses, db_column="userID", null=True, on_delete=models.CASCADE)
     workerID_authorized = models.ManyToManyField(Workers,related_name="workerID_authorized")
     workerID_sentNotification = models.ManyToManyField(Workers, related_name="workerID_sentNotification")
     workerID_hired = models.ManyToManyField(Workers, related_name="workerID_hired")

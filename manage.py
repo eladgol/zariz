@@ -18,12 +18,17 @@ import os
 import sys
 p=os.path.dirname(os.path.abspath(__file__))
 sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
+sys.path=["{}{}{}{}{}{}{}{}{}".format(p,os.sep,"venv",os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
 #sys.path=['/Users/admin/Projects/zariz_37/venv/lib/python3.7/site-packages', '/Users/admin/Projects/zariz_37/lib','/Users/admin/Projects/zariz_37', '/Users/admin/Projects/zariz_37/lib','/Users/admin/Projects/zariz_37/polls','/Users/admin/Projects/zariz_37/mysite', '/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7','/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/lib-dynload']
 print("sys.path = {}".format(sys.path))
 print("sys.version = {}".format(sys.version))
 print("sys.executable = {}".format(sys.executable))
+
 import logging
 logging.basicConfig(level=logging.INFO)
+logging.info("sys.path = {}".format(sys.path))
+logging.info("sys.version = {}".format(sys.version))
+logging.info("sys.executable = {}".format(sys.executable))
 import random
 #import ptvsd
 #print(ptvsd.__version__)

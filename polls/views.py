@@ -31,7 +31,6 @@ import json
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
 import django.contrib.auth
 import django.contrib.auth.views
@@ -92,18 +91,18 @@ def index(request):
     logging.info(a)
     #b = agcs_get()
     filename = "/bucket/test.txt"
-    return django.contrib.auth.views.login(request,
+    return django.contrib.auth.views.LoginView.as_view(
         template_name='loginGrid.html',
         authentication_form=BootstrapAuthenticationForm,
-        extra_context=
-        {
-            'title': 'Log in',
-            'year': datetime.now().year,
-        }
-    )
-    #return render(
-    #    request,
-    #    'loginGrid.html')
+        # extra_context=
+        # {
+        #     'title': 'Log in',
+        #     'year': datetime.now().year,
+        # }
+    )(request)
+    # return render(
+    #     request,
+    #     'loginGrid.html')
     
 @csrf_exempt
 def loginFirebase(request):

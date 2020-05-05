@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls import include, url
+from django.conf.urls import url
 from django.contrib import admin
 
 import django.contrib.auth.views
@@ -24,9 +24,9 @@ import polls.forms
 from datetime import datetime
 urlpatterns = [
     url(r'^$', index),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^login/$',
-    django.contrib.auth.views.login,
+    django.contrib.auth.views.LoginView,
     {
         'template_name': 'loginGrid.html',
         'authentication_form': polls.forms.BootstrapAuthenticationForm,
@@ -37,7 +37,7 @@ urlpatterns = [
         }
     },
     name='login'),
-    url(r'^logout$', django.contrib.auth.views.logout,{ 'next_page': '/',}, name='logout'),
+    url(r'^logout$', django.contrib.auth.views.LogoutView,{ 'next_page': '/',}, name='logout'),
     url(r'^fire/$', loginFirebase),
     url(r'^firebaseSuccess/', firebaseSuccess, name="firebaseSuccess"),
     url(r'^accounts/profile/', profilePage, name='profilePage'),
@@ -56,7 +56,7 @@ urlpatterns = [
     url(r'^signUp/',signUp, name='signUp'),
     url(r'^getAllJobsAsBoss/',getAllJobsAsBoss, name='getAllJobsAsBoss'),
     url(r'^getAllJobsAsWorker/',getAllJobsAsWorker, name='getAllJobsAsWorker'),
-    url(r'^testlocallogin/', django.contrib.auth.views.login,
+    url(r'^testlocallogin/', django.contrib.auth.views.LoginView,
     {
         'template_name': 'testlocallogin.html',
         'authentication_form': polls.forms.BootstrapAuthenticationForm,

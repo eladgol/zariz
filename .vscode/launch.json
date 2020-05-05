@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "pythonMain",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "runserver",
+                "--nothreading",
+                "--noreload"
+            ],
+        },
+        {
             "name": "python2",
             "type": "python",
             "request": "launch",
