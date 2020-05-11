@@ -56,7 +56,7 @@ import logging
 
 from fcm_django.models import FCMDevice
 d = FCMDevice.objects.all()
-locale.setlocale(locale.LC_ALL, '')
+#locale.setlocale(locale.LC_ALL, '')
 def _get_access_token():
     """
     get access token for firebase
@@ -755,14 +755,18 @@ def localLogin(request):
     pretty_print_POST(request)
     localUser = request.POST.get('localUser', None)
     localPassword = request.POST.get('localPassword', None)
-    payload = authenticateUser(request, localUser, localPassword) 
+    try:
+        payload = authenticateUser(request, localUser, localPassword) 
+    except Exception as e:
+        logging.warn("localLogin, login failed, {}".format(e))
+        payload = payload = {'success': False, 'error': str(e)}
     if payload['success']:
         payload['redirectUrl'] = 'accounts/profile/'
         worker = getWorker(request.user.username)
         if worker.photoAGCSPath is '' and 'photoURL' in payload and payload['photoURL']!='':
             logging.info('saving {} -> {}'.format(payload['photoURL'], payload['photoFileName']))
             downoladPhotoAndSaveToWorker(payload['photoURL'], payload['photoFileName'], worker)
-    logging.info("Login payload result {} for {}, {}".format(payload, localUser, request.user.username))
+    logging.info("localLogin, Login payload result {} for {}, {}".format(payload, localUser, request.user.username))
     return JsonResponse(payload)
 
 @csrf_exempt
@@ -887,7 +891,7 @@ def getBossFieldDetails(request):
 
 @csrf_exempt   
 def getOccupationDetails(request):
-    locale.setlocale(locale.LC_ALL, '')
+    #locale.setlocale(locale.LC_ALL, '')
     #sData = codecs.open(os.path.dirname(__file__) + '/../'+ 'static/content/zarizSettings.json', encoding='utf-8').read()
     #data = ast.literal_eval(sData)
     sPossibleFields = ZarizSettingsDict['occupationFields']

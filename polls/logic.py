@@ -85,15 +85,15 @@ def createUser(request, localUser, localPassword, localEmail):
         bNewUser = False
     except Exception as e:
         try:
-            logging.info("New User?? {}".format(e.message))
+            logging.info("New User?? {}".format(e))
             user = User.objects.create_superuser(localUser, localEmail, localPassword)
             
         except Exception as e2:
-            logging.info("Had problems creating superuser - {}".format(e.message))
+            logging.info("Had problems creating superuser - {}".format(e2))
         try:
             user.save()
         except Exception as e2:
-            logging.info("Unable to save user - {}".format(e.message))
+            logging.info("Unable to save user - {}".format(e2))
     if bNewUser:
         payload = authenticateUser(request, localUser, localPassword)   
         payload['isNewUser'] = 'true'

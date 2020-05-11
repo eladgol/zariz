@@ -54,7 +54,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
     'polls',
     "fcm_django"
 )
@@ -69,13 +68,12 @@ FCM_DJANGO_SETTINGS = {
          # default: False
         "DELETE_INACTIVE_DEVICES": False,
 }
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -118,15 +116,17 @@ sys.path.append(os.getcwd() + os.sep + 'lib')
   #  pymysql.install_as_MySQLdb()
 
 # [START db_setup]
-if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
+print("SSSServer software {}".format(os.getenv('GAE_APPLICATION', '')))
+if os.getenv('GAE_APPLICATION', None):
+#if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
     print("Running on production App Engine")
     # Running on production App Engine, so connect to Google Cloud SQL using
     # the unix socket at /cloudsql/<your-cloudsql-connection string>
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '/cloudsql/zariz-204206:europe-west4:zariz-sql5',
-            'NAME': 'ZarizDB',
+            'HOST': '/cloudsql/zariz-204206:europe-west3:root',
+            'NAME': 'zariz_sql1',
             'USER': 'root',
             'PASSWORD': 'LetMeIn123',
         }
@@ -152,10 +152,10 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': 'localhost',
+            'HOST': '127.0.0.1',
             'PORT': '3306',
-            'NAME': 'ZarizDB',
-            'USER': 'elad',
+            'NAME': 'zariz_sql1',
+            'USER': 'root',
             'PASSWORD': 'LetMeIn123',
     
 
