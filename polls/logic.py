@@ -76,6 +76,10 @@ def updateFireBaseDB(userEmail):
         fbUser.save()
     return fbUser
 
+def workerJobMatch(w, j):
+    bMatch = (j.occupationFieldListString in w.occupationFieldListString) and (j.wage >= w.wage)
+    return bMatch
+
 def createUser(request, localUser, localPassword, localEmail):
     bNewUser = True
     payload = {"success" : "false"}
@@ -140,9 +144,31 @@ def getWorker(username):
         except Exception as e:
             print(str(e))
             return None
+    
     print("END getWorker for {}, worker userID {}".format(username, worker[0].userID))
     return worker[0]
 
+
+def checkModelHasAllFieldsFull(model_instance, ignore_fields):
+    print("checkModelHasAllFieldsFull, for {}".format(model_instance))
+    for f in type(model_instance)._meta.get_fields():
+        try:
+            bIgnore = False
+            for iField in ignore_fields:
+                if iField.lower() in f.name.lower():
+                    bIgnore = True
+                    break
+            if bIgnore:
+                continue
+            val_default = f.get_default()
+            val = f.value_from_object(model_instance)
+            print("checkModelHasAllFieldsFull,  {} : {} [{}]".format(f.name, val, val_default))
+            if val == val_default:
+                return False
+        except:
+            pass
+    return True
+    
 def getBoss(username):
     bCreateBoss =False
     print("Start getBoss for {}".format(username))

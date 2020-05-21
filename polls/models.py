@@ -35,7 +35,7 @@ class Workers(models.Model):
     place = models.CharField(max_length=200, default = "")
     lat = models.FloatField(default=0.0)
     lng = models.FloatField(default=0.0)
-    radius = models.FloatField(default=0.1)
+    #radius = models.FloatField(default=0.1)
     wage = models.FloatField(default=29.12)
     userID = models.OneToOneField(
         User,

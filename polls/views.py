@@ -125,7 +125,7 @@ def testlocallogin(request):
 def updateLocation(request):
     lat = request.POST.get('lat', None)
     lng = request.POST.get('lng', None)
-    radius = request.POST.get('radius', None)
+    #radius = request.POST.get('radius', None)
     place = request.POST.get('place', None)
     try:
         worker = Workers.objects.get(userID=request.user.id)
@@ -133,7 +133,7 @@ def updateLocation(request):
         worker = Workers(userID=request.user.id)
     worker.lat = float(lat)
     worker.lng = float(lng)
-    worker.radius = float(radius)
+    #worker.radius = float(radius)
     worker.place = str(place)
     worker.save()
 
@@ -196,8 +196,8 @@ def queryWorkersForJob(job):
         lWorkers = []
         for w in Workers.objects.all():
             logging.info("queryJob - worker - {}, {}, {};".format(w.firstName, w.lastName, w.occupationFieldListString))
-            if w.firstName=="":
-                logging.info("queryJob - empty worker ignoring...")
+            if not checkModelHasAllFieldsFull(w,  ["Path", "radius", "wage"]):
+                logging.info("queryJob - worker details not full, ignoring...")
                 continue
             if job.occupationFieldListString in ast.literal_eval(w.occupationFieldListString):
                 #try:
@@ -382,7 +382,7 @@ def confirmHire(request):
     j.save()
     payload = JsonResponse({"success" : True})
     
-    logging.info("confirmHire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(lHired)))
+    logging.info("confirmHire End, {}, worker {} {} {} job {}, length of hired {}".format(payload.content, worker.firstName, worker.lastName, 'hired to' if bHired else 'fired from', j.jobID, len(j.workerID_hired.all())))
     return payload
 @csrf_exempt
 def updateAllInputsForm(request):
@@ -393,9 +393,10 @@ def updateAllInputsForm(request):
     wage = float(request.POST.get('wage', None)) if request.POST.get('wage', None) else None
     lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
     lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
-    radius = float(request.POST.get('radius', None)) if request.POST.get('radius', None) else None 
+    #radius = float(request.POST.get('radius', None)) if request.POST.get('radius', None) else None 
     lOccupationFieldListString = str(request.POST.get('lOccupationFieldListString', None).replace(']','').replace('[','').split(','))
-
+    if lOccupationFieldListString == "['']":
+        lOccupationFieldListString = ""
     try:
         worker = Workers.objects.get(userID=request.user.id)
     except Exception as e:
@@ -431,9 +432,9 @@ def updateAllInputsForm(request):
     if place is not None and worker.place != place:
         worker.place = place
         bWorkerChanged = True
-    if radius is not None and worker.radius != radius:
-        worker.radius = radius
-        bWorkerChanged = True
+    # if radius is not None and worker.radius != radius:
+    #     worker.radius = radius
+    #     bWorkerChanged = True
     if wage is not None and worker.wage != wage:
         worker.wage = float(wage)
         bWorkerChanged = True
@@ -451,20 +452,25 @@ def updateAllInputsForm(request):
     except Exception as e:
         logging.info("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
         return JsonResponse({"success" : False})
-    
+        
+    bCheckAllFieldsFull = checkModelHasAllFieldsFull(worker, ["Path", "radius", "wage"])
     if bWorkerChanged:
         worker.save()
-        payload = {'success': True, 'firstName' : worker.firstName,
+        payload = {'success': True, "detailsFull" : bCheckAllFieldsFull, 'firstName' : worker.firstName,
             'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
-            'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
+            # 'radius' : str(worker.radius),
+            'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
             'username' : user.username, 'lOccupationFieldListString' : str(worker.occupationFieldListString)}
         logging.info("updateAllInputsForm, success,  returning - {}".format(payload))
     else:
-        payload = {'success': True, 'Error' : 'no change', 'firstName' : worker.firstName,
+        payload = {'success': True, "detailsFull" : bCheckAllFieldsFull, 'Error' : 'no change', 'firstName' : worker.firstName,
             'lastName' : worker.lastName, 'wage' : str(worker.wage), 'photoAGCSPath' : worker.photoAGCSPath, 'place': worker.place,
-            'radius' : str(worker.radius), 'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
+            # 'radius' : str(worker.radius),
+            'lat' : str(worker.lat), 'lng' : str(worker.lng), 'userID' : str(user.id), 'email' : user.email, 
             'username' : user.username, 'lOccupationFieldListString' : str(worker.occupationFieldListString)}
         logging.info("updateAllInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
+    
+    
     return JsonResponse(payload)
 
 @csrf_exempt
@@ -477,9 +483,14 @@ def getAllJobsAsWorker(request):
     relevantJobList = []
     for j in jobs:
         lRelevant = [j for w in j.workerID_sentNotification.all() if (w.userID == worker.userID)]
+        
         if len(lRelevant)!=0:
             relevantJobList.append(j)
-    
+        elif workerJobMatch(worker, j):
+            relevantJobList.append(j)
+            j.workerID_sentNotification.add(worker.workerID)
+            j.save()
+
     d = {'success': True}
     i=0
     
@@ -557,7 +568,7 @@ def updateJobAsBoss(request):
     jobID = request.POST.get('jobID', None)
     logging.info("updateJobAsBoss - jobID {}, discription - {}, place {}, lat {}, lng {}, wage {}, occupationFieldListString {}".
             format(jobID, discription, place, lat, lng, wage, occupationFieldListString))
-            
+    
     try:
         Boss = Bosses.objects.get(userID=request.user.id)
     except Exception as e:
@@ -576,7 +587,6 @@ def updateJobAsBoss(request):
             Job = Jobs(bossID=Boss)
             bNewJob = True
             logging.info("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
-    
     if (bNewJob or [Job.discription, Job.place, Job.lat, Job.lng, Job.wage, Job.nWorkers, Job.occupationFieldListString] 
         != [discription, place, lat, lng, wage, nWorkers, occupationFieldListString]):
         Job.discription = discription
@@ -591,23 +601,26 @@ def updateJobAsBoss(request):
         Job.workerID_authorized.clear()
         Job.workerID_sentNotification.clear()
         Job.workerID_hired.clear()
-        Job.save()
-        
-        
-        payload = {'success': True, 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
-            'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
-        logging.info("updateJobAsBoss - Saved Job, payload {}".format(payload))
-        dRet = queryWorkersForJob(Job)
-        if not dRet["success"]:
-            return JsonResponse(dRet)
-
-        lWorkers=dRet["lWorkers"]
-        try:
-            SendPushNotifications(lWorkers, Job)
-        except Exception as e:
-            logging.info("updateJobAsBoss, exception on send push notitification - {}",format(e.message))
+        bDetailsFull = checkModelHasAllFieldsFull(Job, ['lat', 'lng', 'wage', 'nWorkers'])
+        if not bDetailsFull:
+            payload = {'success': False, 'error' : 'details not full'}
+        else:
+            Job.save()
             
-        
+            
+            payload = {'success': True, 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
+                'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+            logging.info("updateJobAsBoss - Saved Job, payload {}".format(payload))
+            dRet = queryWorkersForJob(Job)
+            if not dRet["success"]:
+                return JsonResponse(dRet)
+
+            lWorkers=dRet["lWorkers"]
+            try:
+                SendPushNotifications(lWorkers, Job)
+            except Exception as e:
+                logging.info("updateJobAsBoss, exception on send push notitification - {}".format(e.message))
+  
     else:
         payload = {'success': True, 'Error' : 'no change', 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
             'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
@@ -656,20 +669,23 @@ def updateAllBossInputsForm(request):
     except Exception as e:
         logging.info("SHOULD NOT HAPPEN!!!!No user found - {}".format(e.message))
         return JsonResponse({"sucess" : False})
-        
+    
+    bCheckAllFieldsFull = checkModelHasAllFieldsFull(Boss, ["Path", "radius", "wage"])
+    
     if bBossChanged:
         Boss.save()
         payload = {'success': True, 'firstName' : Boss.firstName,
-            'lastName' : Boss.lastName,  'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
+            'lastName' : Boss.lastName, "detailsFull" : bCheckAllFieldsFull, 'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
             'lat' : "{}".format(Boss.lat), 'lng' : "{}".format(Boss.lng), 'userID' : "{}".format(user.id), 'email' : user.email, 
             'username' : user.username}
         logging.info("updateAllBossInputsForm, success,  returning - {}".format(payload))
     else:
         payload = {'success': True, 'Error' : 'no change', 'firstName' : Boss.firstName,
-            'lastName' : Boss.lastName, 'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
+            'lastName' : Boss.lastName, "detailsFull" : bCheckAllFieldsFull, 'photoAGCSPath' : Boss.photoAGCSPath, 'place': Boss.place,
             'lat' : "{}".format(Boss.lat), 'lng' : "{}".format(Boss.lng), 'userID' : "{}".format(user.id), 'email' : user.email, 
             'username' : user.username}
         logging.info("updateAllBossInputsForm, Error, call for nothing, no real change, returning - {}".format(payload))
+    payload["detailsFull"] = checkModelHasAllFieldsFull(Boss, ["Path", "radius", "wage"])
     return JsonResponse(payload)
 
 
@@ -726,9 +742,10 @@ def registerDevice(request):
         return JsonResponse({'success': False, 'error':'missing reg_id or device_id'})
     try:
         device = FCMDevice.objects.get(user=request.user, device_id=device_id)
+        logging.info("registerDevice, already registered device")
     except Exception as e:
         device = FCMDevice(user=request.user, device_id=device_id)
-    logging.info("registerDevice, added device")
+        logging.info("registerDevice, added device")
     
     device.registration_id = reg_id
     device.type = deviceType
@@ -859,6 +876,7 @@ def getFieldDetails(request):
     worker = getWorker(request.user.username)
     logging.info("getFieldDetails after getWorker")
     d = model_to_dict(worker)
+    d["detailsFull"] = checkModelHasAllFieldsFull(worker, ["Path", "radius", "wage"])
     logging.info("getFieldDetails {}".format(d))
     return JsonResponse(d)
 
@@ -886,6 +904,7 @@ def getBossFieldDetails(request):
     Boss = getBoss(request.user.username)
     logging.info("getBossFieldDetails after getBoss")
     d = model_to_dict(Boss)
+    d["detailsFull"] = checkModelHasAllFieldsFull(Boss, ["Path", "radius", "wage"])
     logging.info("getBossFieldDetails {}".format(d))
     return JsonResponse(d)
 

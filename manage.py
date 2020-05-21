@@ -30,14 +30,15 @@ logging.info("sys.path = {}".format(sys.path))
 logging.info("sys.version = {}".format(sys.version))
 logging.info("sys.executable = {}".format(sys.executable))
 import random
-#import ptvsd
+sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
+import ptvsd
 #print(ptvsd.__version__)
 #print(ptvsd.__file__)
 p = random.randint(40000, 50000)
 ip = '127.0.0.1'
-#print("Enabling Attach on {}:{}".format(ip, p))
-#ptvsd.enable_attach(address = (ip, p), redirect_output=True)
-#ptvsd.wait_for_attach()
+print("Enabling Attach on {}:{}".format(ip, p))
+ptvsd.enable_attach(address = (ip, p), redirect_output=True)
+# ptvsd.wait_for_attach()
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 
