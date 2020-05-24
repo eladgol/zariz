@@ -420,7 +420,7 @@ def updateAllInputsForm(request):
 
         buff = base64.b64decode(base64Val)
 
-        sFileName = 'profile_pic_{}_{}_.{}'.format(request.user.username, time.time(), file_ext)
+        sFileName = 'profile_pic_{}_{}_{}_.{}'.format(request.user.username, request.user.id, time.time(), file_ext)
         worker.photoAGCSPath = uploadBlob(sFileName, buff, header64)
         bWorkerChanged = True
     if firstName is not None and worker.firstName != firstName:

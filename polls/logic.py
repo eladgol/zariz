@@ -56,9 +56,11 @@ def downoladPhotoAndSaveToWorker(url, sFileName, worker):
 
 def uploadBlob(sFileName, buff, contentType):
     try:
+        print("upload_blob before")
         url = upload_blob(sFileName, buff, contentType)
+        print("upload_blob after - url {}".format(url))
     except Exception as e:
-        print(str(e))
+        print("upload_blob exceprion - {}".format(e))
     return url
     
 def updateFireBaseDB(userEmail):
