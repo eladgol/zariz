@@ -125,6 +125,19 @@ def authenticateUser(request, localUser, localPassword):
 
     return payload
 
+def loginByEmail(request, email):
+    logging.info("loginByEmail, email {}".format(email))
+    try:
+        user = User.objects.get(email=email)
+        logging.info("loginByEmail, user exists, logging in...")
+        login(request, user)
+    except:
+        password =  uuid.uuid4()
+        logging.info("loginByEmail, creating user {}, password {} and logging in...".format(email, password))
+        createUser(request, email, password, email) 
+
+    logging.info("loginByEmail, End - {}".format(email))
+
 def getWorker(username):
     bCreateWorker =False
     #print("Start getWorker for {}".format(username))
@@ -194,3 +207,15 @@ def getBoss(username):
             return None
     print("END getBoss for {}, Boss userID {}".format(username, Boss[0].userID))
     return Boss[0]
+
+from django.core.mail import send_mail
+
+def sendEmailDjango(email):
+    try:
+        send_mail('איפוס סיסמה מזריז', '',
+        'from@example.com',
+        ['to@example.com'],
+        fail_silently=False,
+        )
+    except Exception as e:
+        print("sendMail, exception  {}".format(e))

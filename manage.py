@@ -17,12 +17,25 @@
 import os
 import sys
 p=os.path.dirname(os.path.abspath(__file__))
-sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
-sys.path=["{}{}{}{}{}{}{}{}{}".format(p,os.sep,"venv",os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
-#sys.path=['/Users/admin/Projects/zariz_37/venv/lib/python3.7/site-packages', '/Users/admin/Projects/zariz_37/lib','/Users/admin/Projects/zariz_37', '/Users/admin/Projects/zariz_37/lib','/Users/admin/Projects/zariz_37/polls','/Users/admin/Projects/zariz_37/mysite', '/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7','/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/lib-dynload']
+#sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
+#sys.path=["{}{}{}{}{}{}{}{}{}".format(p,os.sep,"venv",os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]
+# sys.path+=['/Users/admin/Projects/zariz_37/venv/lib/python3.7/site-packages']
+# sys.path+=['/Users/admin/Projects/zariz_37']
+# sys.path+=['/Users/admin/Projects/zariz_37/lib']
+# sys.path+=['/Users/admin/Projects/zariz_37/polls']
+# sys.path+=['/Users/admin/Projects/zariz_37/mysite']
+# sys.path+=['/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7']
+# sys.path+=['/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/lib-dynload']
+sys.path.append('{}{}'.format(p, os.sep))
+sys.path.append('{}{}lib'.format(p, os.sep))
+sys.path.append('{}{}polls'.format(p, os.sep))
+sys.path.append('{}{}mysite'.format(p, os.sep))
+sys.path.append('{}{}venv{}lib{}python3.7{}site-packages'.format(p, os.sep, os.sep, os.sep, os.sep))
+
 print("sys.path = {}".format(sys.path))
 print("sys.version = {}".format(sys.version))
 print("sys.executable = {}".format(sys.executable))
+#os.environ.update({'PYTHONPATH': "/usr/local/opt/python/bin/python3.7")})
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -30,15 +43,15 @@ logging.info("sys.path = {}".format(sys.path))
 logging.info("sys.version = {}".format(sys.version))
 logging.info("sys.executable = {}".format(sys.executable))
 import random
-sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
+#sys.path=["{}{}{}{}{}{}{}".format(p,os.sep,"lib",os.sep,"python3.7",os.sep,"site-packages")]+ sys.path
 import ptvsd
-#print(ptvsd.__version__)
-#print(ptvsd.__file__)
+print(ptvsd.__version__)
+print(ptvsd.__file__)
 p = random.randint(40000, 50000)
 ip = '127.0.0.1'
 print("Enabling Attach on {}:{}".format(ip, p))
 ptvsd.enable_attach(address = (ip, p), redirect_output=True)
-# ptvsd.wait_for_attach()
+#ptvsd.wait_for_attach()
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 

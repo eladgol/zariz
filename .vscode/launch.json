@@ -28,12 +28,21 @@
             ],
         },
         {
+            "name": "pythonMigrate",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "args": [
+                "migrate"
+            ],
+        },
+        {
             "name": "Attach (Remote Debug)",
             "type": "python",
             "request": "attach",
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "${workspaceFolder}",
-            "port": 42461,
+            "port": 45942,
             "host": "127.0.0.1"
         },
         {
@@ -128,7 +137,7 @@
             "name": "Python: All debug Options",
             "type": "python",
             "request": "launch",
-            "pythonPath": "${config:python.pythonPath}",
+            "pythonPath": "${config:python.interpreterPath}",
             "program": "${file}",
             "module": "module.name",
             "env": {

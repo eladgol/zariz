@@ -28,8 +28,10 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
+print("BASE_DIR {}".format(BASE_DIR))
+import sys
+sys.path.append("{}{}venv{}lib".format(BASE_DIR,os.sep,os.sep))
+print("sys.path {}".format(sys.path))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -48,14 +50,16 @@ ALLOWED_HOSTS = ['*', '10.0.0.2', '192.168.1.13', '192.168.43.14', '192.168.0.12
 # Application definition
 
 INSTALLED_APPS = (
+    'polls',
+    "fcm_django",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'polls',
-    "fcm_django"
+    'django.contrib.sites',
+    'rest_framework',
 )
 
 FCM_DJANGO_SETTINGS = {
@@ -192,3 +196,12 @@ STATIC_URL = '/static/'
 #SECURE_SSL_REDIRECT = True
 #SESSION_COOKIE_SECURE = True
 #CSRF_COOKIE_SECURE = True
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+#EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
+
+# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# EMAIL_FILE_PATH = '/tmp/app-messages' # change this to a proper location
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_FILE_PATH = "."
+SITE_ID=5

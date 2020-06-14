@@ -44,7 +44,7 @@ from polls.forms import BootstrapAuthenticationForm
 from datetime import datetime
 import sys
 sys.path.append(os.path.dirname(__file__))
-from logic import *
+from polls.logic import *
 from polls.models import UserFirebaseDB, Workers, BusyEvent, NotficationMessages
 from django.utils import timezone
 from django.core import serializers
@@ -121,6 +121,22 @@ def testlocallogin(request):
         'testlocallogin.html',
         {}
     )
+def function_checkemail(email):
+    return True
+from forms import FpasswordForm
+#@cache_control(max_age=0, no_cache=True, no_store=True, must_revalidate=True)
+def fPassword(request):
+    form = FpasswordForm(request.POST or None)
+    #if form.is_valid():
+    email = form.cleaned_data["email"]
+    if function_checkemail(email):
+        form.save(from_email='blabla@blabla.com', email_template_name='password_reset_email.html')
+        print("EMAIL SENT")
+    else:
+        print("UNKNOWN EMAIL ADRESS")
+        payload = {'success': True,}
+    return JsonResponse(payload)
+
 @csrf_exempt
 def updateLocation(request):
     lat = request.POST.get('lat', None)
@@ -402,23 +418,24 @@ def updateAllInputsForm(request):
     except Exception as e:
         worker = Workers(userID=request.user.id)
     bWorkerChanged = False
-    if photoAGCSPath is not None and photoAGCSPath != worker.photoAGCSPath:
+    if photoAGCSPath is not None and photoAGCSPath != '' and photoAGCSPath != worker.photoAGCSPath:
         splitVal = photoAGCSPath.split(',')
-        base64Val = splitVal[1]
-        header64 = splitVal[0]
-        file_ext = 'unknown'
-        if 'jpeg' in header64:
-            file_ext = 'jpeg'
-        if 'jpg' in header64:
-            file_ext = 'jpg'
-        elif 'gif' in header64:
-            file_ext = 'gif'
-        elif 'png' in header64:
-            file_ext = 'png'
-        else:
-            file_ext = header64[len(u'data:image/'):]
+        if (len(splitVal > 1)):
+            base64Val = splitVal[1]
+            header64 = splitVal[0]
+            file_ext = 'unknown'
+            if 'jpeg' in header64:
+                file_ext = 'jpeg'
+            if 'jpg' in header64:
+                file_ext = 'jpg'
+            elif 'gif' in header64:
+                file_ext = 'gif'
+            elif 'png' in header64:
+                file_ext = 'png'
+            else:
+                file_ext = header64[len(u'data:image/'):]
 
-        buff = base64.b64decode(base64Val)
+            buff = base64.b64decode(base64Val)
 
         sFileName = 'profile_pic_{}_{}_{}_.{}'.format(request.user.username, request.user.id, time.time(), file_ext)
         worker.photoAGCSPath = uploadBlob(sFileName, buff, header64)
@@ -553,7 +570,115 @@ def deleteJobAsBoss(request):
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     logging.info("deleteJobAsBoss - Deleted job ID {}".format(jobID))
     return JsonResponse({'success': True})
-    
+
+def sendEmail(request):
+    email =  request.POST.get('email')
+    logging.info("updateJobAsBoss - sendEmail, with {}".format(email))
+    try:
+        sendEmailDjango(email)
+    except Exception as e:
+        print("sendEmail, Exception {}".format(e))
+
+import requests
+def generateAppToken():
+    appSecret = "b2c34da662119590feaf6dcd5b4f725c"
+    appId = 707855096682092
+    # generate app token
+    sURLGenerateAppToken = "https://graph.facebook.com/oauth/access_token?client_id={}&client_secret={}&grant_type=client_credentials".format(appId, appSecret)
+    logging.info("fb_login, sURLGenerateAppToken {}".format(sURLGenerateAppToken))
+    response = requests.get(sURLGenerateAppToken)
+ 
+    return response
+@csrf_exempt
+def fb_login(request):
+    logging.info("fb_login, {}".format(request.POST))
+    payload = {}
+
+    respones = generateAppToken()
+    if (response.status_code > 400):
+        payload['success'] = False
+        payload['error'] = str(response.status_code)
+        return JsonResponse(payload)
+    # validate user token against app token
+    access_token =  json.loads(str(response.content.decode("utf-8")))['access_token']
+    sValidateUrl = 'https://graph.facebook.com/debug_token?input_token={}&access_token={}'.format(access_token, request.POST["token"])
+    logging.info("fb_login, sValidateUrl {}".format(sValidateUrl))
+    response = requests.get(sValidateUrl)
+    if (response.status_code > 400):
+        payload['success'] = False
+        payload['error'] = str(response.status_code)
+        return JsonResponse(payload)
+        
+    bIsValid = False
+    data =json.loads(str(response.content.decode("utf-8")))['data']
+
+    if data['is_valid'] and data['app_id']==str(appId):
+        try:
+            # get details from facebook
+            sDetailsURL = 'https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture.type(large)&access_token={}'.format(request.POST["token"])
+            graphResponse = requests.get(sDetailsURL)
+            if (graphResponse.status_code > 400):
+                payload['success'] = False
+                payload['error'] = str(response.status_code)
+                return JsonResponse(payload)
+            logging.info("URL - {}".format(sDetailsURL))
+            logging.info("graphResponse - {}".format(graphResponse.content))
+            userData = json.loads(str(graphResponse.content.decode("utf-8")))
+            sPicutreURL = "http://graph.facebook.com/{}/picture?type=small&redirect=true&width={}&height={}".format(userData["id"], pictureWidth, pictureHeight)
+            loginByEmail(request, userData["email"])
+            updateDetailsFromSocial(userData, sPicutreURL)
+        except Exception as e:
+            logging.info("fb_login, 0, {}".format(e))
+        
+        bIsValid = True
+        
+    payload = {'success': bIsValid}
+    return JsonResponse(payload)
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
+@csrf_exempt
+def google_login(request):
+    logging.info("google_login, {}".format(request.POST))
+    payload = {'success': False}
+    token = request.POST["token"]
+    id = request.POST["id"]
+    try:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request())
+    except ValueError as e:
+        logging.warn("google_login, Invalid token - {}".format(e))
+        return JsonResponse(payload)
+    except Exception as e:
+        logging.warn("google_login, exception - {}".format(e))
+        return JsonResponse(payload)
+    try:
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            logging.warn("google_login, Wrong issuer")
+        else:
+            payload['success'] = True
+            payload['first_Name'] = idinfo['given_name']
+            payload['last_Name'] = idinfo['family_name']
+            sPicutreURL = idinfo['picture']
+            payload['email'] = idinfo['email']
+            loginByEmail(request, payload["email"])
+            updateDetailsFromSocial(payload, sPicutreURL)
+    except Exception as e:
+        logging.warn("google_login, 2, exception - {}".format(e))
+            
+    return JsonResponse(payload)
+
+def updateDetailsFromSocial(payload, sPicutreURL):
+    worker = getWorker(payload["email"])
+    worker.firstName = payload["first_name"] if Workers._meta.get_field('firstName').get_default() == worker.firstName else worker.firstName
+    worker.lastName = payload["last_name"] if Workers._meta.get_field('lastName').get_default() == worker.lastName else worker.lastName
+    pictureWidth = pictureHeight = 240
+    worker.photoAGCSPath = sPicutreURL#userData["picture"]["data"]["url"] if Workers._meta.get_field('photoAGCSPath').get_default()  == worker.photoAGCSPath else worker.photoAGCSPath
+    worker.save()
+    boss = getBoss(payload["email"]) 
+    boss.firstName = payload["first_name"]  if Bosses._meta.get_field('firstName').get_default()  == boss.firstName else boss.firstName
+    boss.lastName = payload["last_name"]  if Bosses._meta.get_field('lastName').get_default() == boss.lastName else boss.lastName
+    boss.photoAGCSPath = sPicutreURL#userData["picture"]["data"]["url"] # if Bosses._meta.get_field('photoAGCSPath').get_default() == boss.photoAGCSPath else boss.photoAGCSPath
+    boss.save()
 @csrf_exempt
 def updateJobAsBoss(request):
     discription = request.POST.get('discription', None)
@@ -776,7 +901,7 @@ def localLogin(request):
         payload = authenticateUser(request, localUser, localPassword) 
     except Exception as e:
         logging.warn("localLogin, login failed, {}".format(e))
-        payload = payload = {'success': False, 'error': str(e)}
+        payload = {'success': False, 'error': str(e)}
     if payload['success']:
         payload['redirectUrl'] = 'accounts/profile/'
         worker = getWorker(request.user.username)
@@ -1050,6 +1175,7 @@ def ExportDB(request):
     return response
 
 from ast import literal_eval as leval
+from django.template.base import Token
 def LoadDBFromFile(request):
     if request.method == 'POST' and request.FILES['myfile']:
         f = request.FILES['myfile']
