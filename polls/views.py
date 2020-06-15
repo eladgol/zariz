@@ -578,24 +578,30 @@ def sendEmail(request):
         sendEmailDjango(email)
     except Exception as e:
         print("sendEmail, Exception {}".format(e))
+def loadFacebookKeys():
+    keysDir  = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..'))
+    keysFile = "{}{}FacebookKeys.json".format(keysDir, os.sep)
+    logging.info("Accessing {}".format(keysFile))
+    with open(keysFile) as f:
+        data = json.load(f)
+    return data
+    
 
 import requests as rq
-def generateAppToken():
-    appSecret = "Secret Saved locally"
-    appId = 707855096682092
+def generateAppToken(appId, appSecret):
     # generate app token
     sURLGenerateAppToken = "https://graph.facebook.com/oauth/access_token?client_id={}&client_secret={}&grant_type=client_credentials".format(appId, appSecret)
     logging.info("fb_login, sURLGenerateAppToken {}".format(sURLGenerateAppToken))
     response = rq.get(sURLGenerateAppToken)
  
     return response
+
 @csrf_exempt
 def fb_login(request):
-    appId = 707855096682092
+    keys = loadFacebookKeys()
     logging.info("fb_login, {}".format(request.POST))
     payload = {}
-
-    response = generateAppToken()
+    response = generateAppToken(keys["AppId"], keys["AppSecret"])
     if (response.status_code > 400):
         payload['success'] = False
         payload['error'] = str(response.status_code)
@@ -613,7 +619,7 @@ def fb_login(request):
     bIsValid = False
     data =json.loads(str(response.content.decode("utf-8")))['data']
 
-    if data['is_valid'] and data['app_id']==str(appId):
+    if data['is_valid'] and data['app_id']==str(keys["AppId"]):
         try:
             # get details from facebook
             sDetailsURL = 'https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture.type(large)&access_token={}'.format(request.POST["token"])
