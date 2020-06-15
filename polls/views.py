@@ -579,22 +579,23 @@ def sendEmail(request):
     except Exception as e:
         print("sendEmail, Exception {}".format(e))
 
-import requests
+import requests as rq
 def generateAppToken():
     appSecret = "b2c34da662119590feaf6dcd5b4f725c"
     appId = 707855096682092
     # generate app token
     sURLGenerateAppToken = "https://graph.facebook.com/oauth/access_token?client_id={}&client_secret={}&grant_type=client_credentials".format(appId, appSecret)
     logging.info("fb_login, sURLGenerateAppToken {}".format(sURLGenerateAppToken))
-    response = requests.get(sURLGenerateAppToken)
+    response = rq.get(sURLGenerateAppToken)
  
     return response
 @csrf_exempt
 def fb_login(request):
+    appId = 707855096682092
     logging.info("fb_login, {}".format(request.POST))
     payload = {}
 
-    respones = generateAppToken()
+    response = generateAppToken()
     if (response.status_code > 400):
         payload['success'] = False
         payload['error'] = str(response.status_code)
@@ -603,7 +604,7 @@ def fb_login(request):
     access_token =  json.loads(str(response.content.decode("utf-8")))['access_token']
     sValidateUrl = 'https://graph.facebook.com/debug_token?input_token={}&access_token={}'.format(access_token, request.POST["token"])
     logging.info("fb_login, sValidateUrl {}".format(sValidateUrl))
-    response = requests.get(sValidateUrl)
+    response = rq.get(sValidateUrl)
     if (response.status_code > 400):
         payload['success'] = False
         payload['error'] = str(response.status_code)
@@ -616,7 +617,7 @@ def fb_login(request):
         try:
             # get details from facebook
             sDetailsURL = 'https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture.type(large)&access_token={}'.format(request.POST["token"])
-            graphResponse = requests.get(sDetailsURL)
+            graphResponse = rq.get(sDetailsURL)
             if (graphResponse.status_code > 400):
                 payload['success'] = False
                 payload['error'] = str(response.status_code)
