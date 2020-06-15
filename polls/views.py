@@ -581,7 +581,7 @@ def sendEmail(request):
 
 import requests as rq
 def generateAppToken():
-    appSecret = "b2c34da662119590feaf6dcd5b4f725c"
+    appSecret = "Secret Saved locally"
     appId = 707855096682092
     # generate app token
     sURLGenerateAppToken = "https://graph.facebook.com/oauth/access_token?client_id={}&client_secret={}&grant_type=client_credentials".format(appId, appSecret)
