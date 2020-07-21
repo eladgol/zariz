@@ -19,7 +19,7 @@ from django.contrib.auth import views as auth_views
 import django.contrib.auth.views
 import django.contrib.auth.urls
 from polls.views import index, loginFirebase, profilePage, testlocallogin, ShowWorkers, updateLocation, notifyTest, updateAllInputsForm, updateAllBossInputsForm, deleteJobAsBoss, hire,confirmHire, sendEmail
-from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss, getAllJobsAsWorker, registerDevice
+from polls.views import firebaseSuccess, occupationPage, updateOccupation, calander, LocationForm, calander2, updateDates, updateInputForm, updateJobAsBoss, getAllJobsAsBoss, getAllJobsAsWorker, registerDevice, PrivacyPolicy
 from polls.views import google_login, fb_login, fPassword, demoForm, demoForm2, carousel, localLogin, dummy, signUp, getFieldDetails, getBossFieldDetails, getWorkerDetailsForID, ExportDB, LoadDBFromFile, occupationDetails, queryJob, confirmJob
 
 #from polls.views import firebaseSuccess
@@ -33,7 +33,7 @@ urlpatterns = [
     # path("accounts/", auth_views.PasswordResetView.as_view(form_class=polls.forms.FpasswordForm)),
     # path("accounts/password_reset_done/", auth_views.PasswordResetDoneView.as_view()),
     path('accounts/', include('django.contrib.auth.urls')),
-    url(r'^$', index),
+    url(r'^index/$', index),
     url(r'^admin/', admin.site.urls),
     url(r'^login/$',
     django.contrib.auth.views.LoginView,
@@ -98,5 +98,6 @@ urlpatterns = [
     url(r'^confirmHire', confirmHire, name='confirmHire'),
     url(r'^registerDevice', registerDevice, name='registerDevice'),
     url(r'^facebookAuth/', fb_login, name='fb_login'),
-    url(r'^googleAuth/', google_login, name='google_login')
+    url(r'^googleAuth/', google_login, name='google_login'),
+    url(r'^PrivacyPolicyLocal/', PrivacyPolicy, name="PrivacyPolicy")
 ]

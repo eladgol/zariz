@@ -194,7 +194,10 @@ def queryJob(request):
     except Exception as e:
         logging.info("queryJob - Failed no such job ID {}".format(jobID))
         return JsonResponse({'success': False, 'error' : 'no such jobID'})
-    
+    if job.marked_deleted == True:
+        logging.info("queryJob - Job deleted {}".format(jobID))
+        return JsonResponse({'success': False, 'error' : 'job deleted'})
+
     dRet = queryWorkersForJob(job)
     if not dRet["success"]:
         return JsonResponse(dRet)
@@ -253,13 +256,28 @@ def SendFiredPushNotifications(lWorkers, job):
         
         for device in devices:
             logging.info("SendFiredPushNotifications, sending push notification to {}".format(device.registration_id))
-            sendFiredPushNotificationMessage(http, job, device, w)       
-                 
-def SendResignPushNotifications(lBosses, job):
+            sendFiredPushNotificationMessage(http, job, device, w)   
+
+def SendJobCanceledPushNotifications(lWorkers, job):
+    import urllib3
+    http = urllib3.PoolManager()
+    for w in lWorkers:
+        logging.info("SendJobCanceledPushNotifications,  worker {}, {}".format(w.firstName, w.lastName))
+        try:
+            devices=FCMDevice.objects.filter(user=w.userID)
+        except:
+            return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
+        
+        for device in devices:
+            logging.info("SendJobCanceledPushNotifications, sending push notification to {}".format(device.registration_id))
+            sendJobCancledPushNotificationMessage(http, job, device, w)            
+
+        
+def SendResignPushNotifications(lBosses, job, w):
     import urllib3
     http = urllib3.PoolManager()
     for b in lBosses:
-        logging.info("SendResignPushNotifications,  boss {}, {}".format(b.firstName, b.lastName))
+        logging.info("SendResignPushNotifications,  boss {}, {}, worker {}, {}".format(b.firstName, b.lastName, w.firstName, w.lastName))
         try:
             devices=FCMDevice.objects.filter(user=b.userID)
         except:
@@ -267,7 +285,21 @@ def SendResignPushNotifications(lBosses, job):
         
         for device in devices:
             logging.info("SendResignPushNotifications, sending push notification to {}".format(device.registration_id))
-            sendResignedPushNotificationMessage(http, job, device, None)
+            sendResignedPushNotificationMessage(http, job, device, w)
+
+def SendWorkerAcceptedPushNotifications(lBosses, w, job):
+    import urllib3
+    http = urllib3.PoolManager()
+    for b in lBosses:
+        logging.info("SendWorkerAcceptedPushNotifications,  boss {}, {}".format(b.firstName, b.lastName))
+        try:
+            devices=FCMDevice.objects.filter(user=b.userID)
+        except:
+            return JsonResponse({'success' : False, 'error' : 'no devices are registered'})
+        
+        for device in devices:
+            logging.info("SendWorkerAcceptedPushNotifications, sending push notification to {}".format(device.registration_id))
+            sendWorkerAcceptedPushNotificationMessage(http, job, device, w)
 
 def SendPushNotifications(lWorkers, job):
     import urllib3
@@ -281,7 +313,7 @@ def SendPushNotifications(lWorkers, job):
         job.workerID_sentNotification.add(w)
         for device in devices:
             logging.info("SendPushNotifications, sending push notification to {}".format(device.registration_id))
-            sendPushNotificationMessage(http, job, device, w)  
+            sendAcceptedPushNotificationMessage(http, job, device, w)  
     job.save()          
 
 @csrf_exempt
@@ -300,6 +332,10 @@ def confirmJob(request):
         logging.info("confirmJob  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
+    if (j.marked_deleted == True):
+        logging.info("confirmJob  - Job marked as deleted {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "Job deleted"})
+
     lResponded = [w for w in j.workerID_responded.all() if (w.userID == worker.userID)]
     lAccepted = [w for w in j.workerID_authorized.all() if (w.userID == worker.userID)]
     lHired = [w for w in j.workerID_hired.all() if (w.userID == worker.userID)]
@@ -311,6 +347,7 @@ def confirmJob(request):
             j.workerID_authorized.add(worker)
         j.save()
         payload = JsonResponse({"success" : True, 'Error' : 'accepted first time'})
+        SendWorkerAcceptedPushNotifications([j.bossID], worker, j)
         bAdded = True
     else:
         if bAccepted:
@@ -328,7 +365,7 @@ def confirmJob(request):
                     j.workerID_hired.remove(worker)
                     j.save()
                     payload = JsonResponse({'success': True, 'Error' : 'changed to refused from hired'})
-                    SendResignPushNotifications([j.bossID], j)
+                    SendResignPushNotifications([j.bossID], j, worker)
                 else:
                     j.save()
                     payload = JsonResponse({'success': True, 'Error' : 'changed to refused from accepted'})
@@ -339,7 +376,7 @@ def confirmJob(request):
                     j.workerID_hired.remove(worker)
                     j.save()
                     payload = JsonResponse({'success': True, 'Error' : 'changed to refused from hired'})
-                    SendResignPushNotifications([j.bossID], j)
+                    SendResignPushNotifications([j.bossID], j, worker)
                 else:
                     payload = JsonResponse({'success': True, 'Error' : 'refused'})
                  
@@ -364,7 +401,10 @@ def hire(request):
         logging.info("hire  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
-    
+    if (j.marked_deleted == True):
+        logging.info("confirmJob  - Job marked as deleted {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "Job deleted"})
+        
     payload = JsonResponse({"success" : True})
     lHired = [w for w in j.workerID_hired.all()]
     if bHired: 
@@ -389,6 +429,10 @@ def confirmHire(request):
         logging.info("hire  - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
     j=job.first()
+    if (j.marked_deleted == True):
+        logging.info("confirmJob  - Job marked as deleted {}".format(jobID))
+        return JsonResponse({"success" : False, "Error" : "Job deleted"})
+      
     if bHired:     
         j.workerID_hired.add(worker)      
     else:
@@ -499,6 +543,8 @@ def getAllJobsAsWorker(request):
     jobs = Jobs.objects.all()
     relevantJobList = []
     for j in jobs:
+        if j.marked_deleted == True:
+            continue
         lRelevant = [j for w in j.workerID_sentNotification.all() if (w.userID == worker.userID)]
         
         if len(lRelevant)!=0:
@@ -528,6 +574,8 @@ def getAllJobsAsWorker(request):
         d['{}'.format(i)]['bAuthorized'] = bAuthorized
         d['{}'.format(i)]['bResponded'] = bResponded
         d['{}'.format(i)]['bHired'] = bHired
+        bCheckAllFieldsFull = checkModelHasAllFieldsFull(job, ["marked_deleted", "workerID_responded", "workerID_authorized", "workerID_hired", "wage"])
+        d['{}'.format(i)]['detailsFull'] = bCheckAllFieldsFull
         i=i+1
     
     return JsonResponse(d)
@@ -543,6 +591,8 @@ def getAllJobsAsBoss(request):
     d = {'success': True}
     i=0
     for job in jobs:
+        if job.marked_deleted == True:
+            continue
         d['{}'.format(i)]=model_to_dict(job)
         d['{}'.format(i)]['workerID_responded']=[]
         for w in job.workerID_responded.all():
@@ -556,6 +606,8 @@ def getAllJobsAsBoss(request):
         d['{}'.format(i)]['workerID_hired']=[]
         for w in job.workerID_hired.all():
             d['{}'.format(i)]['workerID_hired'].append(w.workerID)
+        bCheckAllFieldsFull = checkModelHasAllFieldsFull(job, ["marked_deleted", "workerID_responded", "workerID_authorized", "workerID_hired", "wage"])
+        d['{}'.format(i)]['detailsFull'] = bCheckAllFieldsFull
         i=i+1
     
     return JsonResponse(d)
@@ -564,16 +616,19 @@ def getAllJobsAsBoss(request):
 def deleteJobAsBoss(request):
     jobID = request.POST.get('jobID', None)
     try:
-        job = Jobs.objects.get(jobID=jobID).delete()
+        job = Jobs.objects.get(jobID=jobID)#.delete()
     except Exception as e:
         logging.info("deleteJobAsBoss - Failed no such job ID {}".format(jobID))
         return JsonResponse({"success" : False, "Error" : "no such JobID"})
+    job.marked_deleted = True
+    job.save()
     logging.info("deleteJobAsBoss - Deleted job ID {}".format(jobID))
+    SendJobCanceledPushNotifications(job.workerID_sentNotification.all(), job)
     return JsonResponse({'success': True})
 
 def sendEmail(request):
     email =  request.POST.get('email')
-    logging.info("updateJobAsBoss - sendEmail, with {}".format(email))
+    logging.info("sendEmail, with {}".format(email))
     try:
         sendEmailDjango(email)
     except Exception as e:
@@ -631,6 +686,8 @@ def fb_login(request):
             logging.info("URL - {}".format(sDetailsURL))
             logging.info("graphResponse - {}".format(graphResponse.content))
             userData = json.loads(str(graphResponse.content.decode("utf-8")))
+            pictureHeight = 240
+            pictureWidth = 240
             sPicutreURL = "http://graph.facebook.com/{}/picture?type=small&redirect=true&width={}&height={}".format(userData["id"], pictureWidth, pictureHeight)
             loginByEmail(request, userData["email"])
             updateDetailsFromSocial(userData, sPicutreURL)
@@ -663,8 +720,8 @@ def google_login(request):
             logging.warn("google_login, Wrong issuer")
         else:
             payload['success'] = True
-            payload['first_Name'] = idinfo['given_name']
-            payload['last_Name'] = idinfo['family_name']
+            payload['first_name'] = idinfo['given_name']
+            payload['last_name'] = idinfo['family_name']
             sPicutreURL = idinfo['picture']
             payload['email'] = idinfo['email']
             loginByEmail(request, payload["email"])
@@ -688,14 +745,17 @@ def updateDetailsFromSocial(payload, sPicutreURL):
     boss.save()
 @csrf_exempt
 def updateJobAsBoss(request):
-    discription = request.POST.get('discription', None)
-    
-    place = request.POST.get('place', None)
-    lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
-    lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
-    wage = float(request.POST.get('wage', None)) if request.POST.get('wage', None) else None
-    nWorkers = float(request.POST.get('nWorkers', None)) if request.POST.get('nWorkers', None) else None
-    occupationFieldListString = request.POST.get('lOccupationFieldListString', '') # toDo: change to support multiple occupations per Job
+    try:
+        discription = request.POST.get('discription', None)
+        place = request.POST.get('place', None)
+        lat = float(request.POST.get('lat', None)) if request.POST.get('lat', None) else None
+        lng = float(request.POST.get('lng', None)) if request.POST.get('lng', None) else None
+        wage = float(request.POST.get('wage', None)) if request.POST.get('wage', None) else None
+        occupationFieldListString = request.POST.get('lOccupationFieldListString', '') # toDo: change to support multiple occupations per Job
+    except Exception as e:
+        payload = {'success': False, 'error' : 'details not full or invalid'}
+        logging.info("updateJobAsBoss - details missing")
+        return JsonResponse(payload)
     bNewJob = False
     jobID = request.POST.get('jobID', None)
     logging.info("updateJobAsBoss - jobID {}, discription - {}, place {}, lat {}, lng {}, wage {}, occupationFieldListString {}".
@@ -714,26 +774,29 @@ def updateJobAsBoss(request):
         try:
             Job = Jobs.objects.get(jobID=jobID, bossID=Boss)
             bNewJob = False
+            if Job.marked_deleted == True:
+                payload = {'success': False, 'error' : 'Job deleted'}
+                return JsonResponse(payload)
             logging.info("updateJobAsBoss - Existing job id - {}".format(Job.jobID))
         except Exception as e2:
             Job = Jobs(bossID=Boss)
             bNewJob = True
             logging.info("updateJobAsBoss - Created new job id - {}".format(Job.jobID))
-    if (bNewJob or [Job.discription, Job.place, Job.lat, Job.lng, Job.wage, Job.nWorkers, Job.occupationFieldListString] 
-        != [discription, place, lat, lng, wage, nWorkers, occupationFieldListString]):
+    if (bNewJob or [Job.discription, Job.place, Job.lat, Job.lng, Job.wage, Job.occupationFieldListString] 
+        != [discription, place, lat, lng, wage,occupationFieldListString]):
         Job.discription = discription
         Job.place = place
         Job.lat = lat
         Job.lng = lng
         Job.wage = wage
-        Job.nWorkers = nWorkers
         Job.bossID=Boss
         Job.occupationFieldListString = occupationFieldListString
         Job.workerID_responded.clear()
         Job.workerID_authorized.clear()
         Job.workerID_sentNotification.clear()
         Job.workerID_hired.clear()
-        bDetailsFull = checkModelHasAllFieldsFull(Job, ['lat', 'lng', 'wage', 'nWorkers'])
+        Job.marked_deleted = False
+        bDetailsFull = checkModelHasAllFieldsFull(Job, ['marked_deleted', 'lat', 'lng', 'wage'])
         if not bDetailsFull:
             payload = {'success': False, 'error' : 'details not full'}
         else:
@@ -741,7 +804,7 @@ def updateJobAsBoss(request):
             
             
             payload = {'success': True, 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
-                'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+                'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'occupationFieldListString' : occupationFieldListString}
             logging.info("updateJobAsBoss - Saved Job, payload {}".format(payload))
             dRet = queryWorkersForJob(Job)
             if not dRet["success"]:
@@ -755,7 +818,7 @@ def updateJobAsBoss(request):
   
     else:
         payload = {'success': True, 'Error' : 'no change', 'jobID': "{}".format(Job.jobID), 'discription' : "{}".format(discription), 'place' : "{}".format(place), 
-            'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'nWorkers' : "{}".format(nWorkers), 'occupationFieldListString' : occupationFieldListString}
+            'lat' : "{}".format(lat), 'lng' : "{}".format(lng), 'wage' : "{}".format(wage), 'occupationFieldListString' : occupationFieldListString}
         logging.info("updateJobAsBoss - No change, payload {}".format(payload))
     return JsonResponse(payload)
 
@@ -1121,6 +1184,17 @@ def calander(request):
     )
 
 @csrf_exempt
+def PrivacyPolicy(request):
+    return render(
+        request,
+        'PrivacyPolicy.html',
+        {
+           
+        }
+    )
+
+
+@csrf_exempt
 def ShowWorkers(request):
     workers = Workers.objects.all()
     workerList = [w for w in workers]
@@ -1200,9 +1274,38 @@ def LoadDBFromFile(request):
         return render(request, 'ShowWorkers.html')
     return render(request, 'ShowWorkers.html')
 
+def sendJobCancledPushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{} בנוגע לעבודה".format( job.discription)  
+    bodyMessage+="\n{} {} העבודה בוטלה! מאת ".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage+="\n{} בשכר של".format(job.wage)
+    bodyMessage+="\n{}ב".format(job.place)
+    messageID = str(uuid.uuid4())
+    body = {
+        "to" : device.registration_id,
+        "notification" : {        
+                "body" : bodyMessage,
+                "title" : "{} {}העבודה בוטלה! מ ".format(job.bossID.firstName, job.bossID.lastName)
+        },
+        "priority": "high",
+        "data": {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "id": messageID,
+            "status": "done",
+            "firstName" : job.bossID.firstName,
+            "lastName" : job.bossID.lastName,
+            "wage" : job.wage,
+            "place" : job.place,
+            "jobID" : str(job.jobID),
+            "discription" : job.discription,
+            "message_status" : "Canceled",
+            "workerID" : str(w.userID.id),
+        },
+    }
+    sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w)
+
 def sendFiredPushNotificationMessage(http, job, device, w):
-    bodyMessage="\n{}".format(job.discription)  
-    bodyMessage="\n{} {} הוחלט שלא להעסיק אותך! מאת ".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage="\n{} בנוגע לעבודה".format( job.discription)  
+    bodyMessage+="\n{} {} הוחלט שלא להעסיק אותך! מאת ".format(job.bossID.firstName, job.bossID.lastName)
     bodyMessage+="\n{} בשכר של".format(job.wage)
     bodyMessage+="\n{}ב".format(job.place)
     messageID = str(uuid.uuid4())
@@ -1230,17 +1333,15 @@ def sendFiredPushNotificationMessage(http, job, device, w):
     sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w)
 
 def sendResignedPushNotificationMessage(http, job, device, w):
-    bodyMessage="\n{}".format(job.discription)  
-    bodyMessage="\n{} {} הודעה על התפטרות מאת ".format(job.bossID.firstName, job.bossID.lastName)
-    bodyMessage+="\n{} בשכר של".format(job.wage)
-    bodyMessage+="\n{}ב".format(job.place)
+    bodyMessage="\n{} בנוגע לעבודה".format( job.discription)  
+    bodyMessage+="\n{} {} הודעה על התפטרות מאת ".format(w.firstName, w.lastName)
     messageID = str(uuid.uuid4())
     
     body = {
         "to" : device.registration_id,
         "notification" : {        
                 "body" : bodyMessage,
-                "title" : "{} {}הודעה על התפטרות מ ".format( job.bossID.firstName, job.bossID.lastName)
+                "title" : "{} {}הודעה על התפטרות מ ".format( w.firstName, w.lastName)
         },
         "priority": "high",
         "data": {
@@ -1254,15 +1355,42 @@ def sendResignedPushNotificationMessage(http, job, device, w):
             "jobID" : str(job.jobID),
             "discription" : job.discription,
             "message_status" : "Resigned",
+            "workerID" : str(w.userID.id),
+        },
+    }
+    sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, None)
+
+def sendWorkerAcceptedPushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{} בנוגע לעבודה".format(job.discription)  
+    bodyMessage+="\n{} {} הודעה על התענינות מאת ".format( w.firstName, w.lastName)
+    messageID = str(uuid.uuid4())
+    
+    body = {
+        "to" : device.registration_id,
+        "notification" : {        
+                "body" : bodyMessage,
+                "title" : "{} {}הודעה על התענינות מ ".format( w.firstName, w.lastName)
+        },
+        "priority": "high",
+        "data": {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "id": messageID,
+            "status": "done",
+            "firstName" : w.firstName,
+            "lastName" : w.lastName,
+            "wage" : job.wage,
+            "place" : job.place,
+            "jobID" : str(job.jobID),
+            "discription" : job.discription,
+            "message_status" : "Accepted",
             "workerID" : str(""),
         },
     }
     sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, None)
 
-
 def sendHirePushNotificationMessage(http, job, device, w):
-    bodyMessage="\n{}".format(job.discription)  
-    bodyMessage="\n{} {} ברכות! התקבלת לעבודה מאת ".format(job.bossID.firstName, job.bossID.lastName)
+    bodyMessage="\n{} בנוגע לעבודה".format(job.discription)  
+    bodyMessage+="\n{} {} ברכות! התקבלת לעבודה על ידי ".format(job.bossID.firstName, job.bossID.lastName)
     bodyMessage+="\n{} בשכר של".format(job.wage)
     bodyMessage+="\n{}ב".format(job.place)
     messageID = str(uuid.uuid4())
@@ -1273,7 +1401,7 @@ def sendHirePushNotificationMessage(http, job, device, w):
         "to" : device.registration_id,
         "notification" : {        
                 "body" : bodyMessage,
-                "title" : "{} {}ברכות! התקבלת לעבודה מ ".format(job.bossID.firstName, job.bossID.lastName)
+                "title" : "{} {}ברכות! התקבלת לעבודה על ידי ".format(job.bossID.firstName, job.bossID.lastName)
         },
         "priority": "high",
         "data": {
@@ -1292,9 +1420,9 @@ def sendHirePushNotificationMessage(http, job, device, w):
     }
     sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w)
 
-def sendPushNotificationMessage(http, job, device, w):
-    bodyMessage="\n{}".format(job.discription)  
-    bodyMessage="\n{} {} עבודה מאת".format(job.bossID.firstName, job.bossID.lastName)
+def sendAcceptedPushNotificationMessage(http, job, device, w):
+    bodyMessage="\n{} בנוגע לעבודה".format(job.discription)  
+    bodyMessage+="\n{} {} עבודה מאת".format(job.bossID.firstName, job.bossID.lastName)
     bodyMessage+="\n{} בשכר של".format(job.wage)
     bodyMessage+="\n{}ב".format(job.place)
     messageID = str(uuid.uuid4())

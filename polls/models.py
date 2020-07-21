@@ -59,7 +59,7 @@ class Jobs(models.Model):
     occupationFieldListString = models.CharField(max_length=2048, default = "")
     wage = models.FloatField(default=29.12)
     place = models.CharField(max_length=200, default = "")
-    nWorkers = models.IntegerField(default=1)
+    #nWorkers = models.IntegerField(default=1)
     lat = models.FloatField(default=0.0)
     lng = models.FloatField(default=0.0)
     jobID = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
@@ -68,6 +68,7 @@ class Jobs(models.Model):
     workerID_authorized = models.ManyToManyField(Workers,related_name="workerID_authorized")
     workerID_sentNotification = models.ManyToManyField(Workers, related_name="workerID_sentNotification")
     workerID_hired = models.ManyToManyField(Workers, related_name="workerID_hired")
+    marked_deleted = models.BooleanField(default=False)
 class BusyEvent(models.Model):
     start_date = models.DateTimeField(u'Starting time', help_text=u'Starting time')
     end_date = models.DateTimeField(u'Final time', help_text=u'Final time')

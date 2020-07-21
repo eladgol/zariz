@@ -59,7 +59,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'rest_framework',
 )
 
 FCM_DJANGO_SETTINGS = {
@@ -129,8 +128,8 @@ if os.getenv('GAE_APPLICATION', None):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '/cloudsql/zariz-204206:europe-west3:root',
-            'NAME': 'zariz_sql1',
+            'HOST': '/cloudsql/zariz-204206:europe-west1:root2',
+            'NAME': 'ZarizDB',
             'USER': 'root',
             'PASSWORD': 'LetMeIn123',
         }

@@ -1,2 +1,2 @@
-./cloud_sql_proxy -instances=zariz-204206:europe-west3:root=tcp:3306
-zariz-204206:europe-west3:
+./cloud_sql_proxy -instances=zariz-204206:europe-west1:root2=tcp:3306
+zariz-204206:europe-west1:
