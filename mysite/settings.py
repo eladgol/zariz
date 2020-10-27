@@ -49,17 +49,6 @@ ALLOWED_HOSTS = ['*', '10.0.0.2', '192.168.1.13', '192.168.43.14', '192.168.0.12
 
 # Application definition
 
-INSTALLED_APPS = (
-    'polls',
-    "fcm_django",
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites',
-)
 
 FCM_DJANGO_SETTINGS = {
         "FCM_SERVER_KEY": "AAAAUyJvk20:APA91bHU-nH6dn5veHSzCMAyeyw3ewSMaaBSnbmCrbZvCm-E3WpMyKb-lHno1LrPi7-BJsk7Otdlho1LYj1XlTS2RmC2mry4i3zOnLUQmNZlhqCHK98AQMz3f7spuErcojd8lNN6CNCU",
@@ -112,11 +101,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Environment, MySQLdb will be used.
 import sys
 sys.path.append(os.getcwd() + os.sep + 'lib')
-#try:
-   # import MySQLdb  # noqa: F401
-#except ImportError:
-   # import pymysql
-  #  pymysql.install_as_MySQLdb()
+try:
+   import MySQLdb  # noqa: F401
+except ImportError:
+   import pymysql
+   pymysql.install_as_MySQLdb()
 
 # [START db_setup]
 print("SSSServer software {}".format(os.getenv('GAE_APPLICATION', '')))
@@ -134,6 +123,18 @@ if os.getenv('GAE_APPLICATION', None):
             'PASSWORD': 'LetMeIn123',
         }
     }
+    INSTALLED_APPS = (
+        'polls',
+        "fcm_django",
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'django.contrib.sites',
+    )
+
 else:
     print("Running Locally")
     # Running locally so connect to either a local MySQL instance or connect to
@@ -166,7 +167,18 @@ else:
   #          'PASSWORD': '',
         }
     }
-
+    INSTALLED_APPS = (
+        'polls',
+        "fcm_django",
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'django.contrib.sites',
+        'sslserver'
+    )
 
 
     

@@ -16,7 +16,7 @@
                 "--python_startup_script=${workspaceFolder}/pydev_startup.py",
                 "--automatic_restart=no",
                 "--max_module_instances=default:1",
-                "--threadsafe_override=default:false",
+                "--threadsafe_override=default:false", 
                 "--host=192.168.1.13",
                 "--default_gcs_bucket_name=zariz-204206",
                 "${workspaceFolder}/app.yaml",
@@ -37,7 +37,7 @@
                 "runserver",
                 "--nothreading",
                 "--noreload",
-                "192.168.1.13:8080"
+                "192.168.1.13:80"
             ],
             "group": {
                 "kind": "build",
