@@ -8,7 +8,7 @@
             "args": ["${file}"]
         },
         {
-            "label": "python",
+            "label": "python, Local gcloud",
             "command": "/Users/admin/Projects/zariz_37/venv/bin/python3",
             "type": "process",
             "args": [
@@ -18,6 +18,7 @@
                 "--max_module_instances=default:1",
                 "--threadsafe_override=default:false", 
                 "--host=192.168.1.13",
+                "--port=443",
                 "--default_gcs_bucket_name=zariz-204206",
                 "${workspaceFolder}/app.yaml",
                 "--support_datastore_emulator=False",
@@ -29,15 +30,15 @@
             "problemMatcher": []
         },
         {
-            "label": "python2",
+            "label": "python, local manage.py",
             "command": "python3",
             "type": "process",
             "args": [
                 "manage.py",
-                "runserver",
+                "runsslserver",
                 "--nothreading",
                 "--noreload",
-                "192.168.1.13:80"
+                "192.168.1.13:443"
             ],
             "group": {
                 "kind": "build",

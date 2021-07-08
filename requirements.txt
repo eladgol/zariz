@@ -35,3 +35,4 @@ urllib3==1.25.7
 webapp2==3.0.0b1
 WebOb==1.8.5
 wrapt==1.11.2
+django-sslserver==0.22
