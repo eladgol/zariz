@@ -1196,8 +1196,13 @@ def PrivacyPolicy(request):
 
 @csrf_exempt
 def ShowWorkers(request):
-    workers = Workers.objects.all()
-    workerList = [w for w in workers]
+    try:
+        workers = Workers.objects.all()
+        workerList = [w for w in workers]
+    except Exception as e:
+        print("#######################")
+        print("ShowWorkers, failed {}".format(e))
+        print("#######################")
     return render(
         request,
         'ShowWorkers.html',
@@ -1450,7 +1455,7 @@ def sendAcceptedPushNotificationMessage(http, job, device, w):
 
 def sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w):
     headers = {
-        'Authorization': 'key=AAAAUyJvk20:APA91bHU-nH6dn5veHSzCMAyeyw3ewSMaaBSnbmCrbZvCm-E3WpMyKb-lHno1LrPi7-BJsk7Otdlho1LYj1XlTS2RmC2mry4i3zOnLUQmNZlhqCHK98AQMz3f7spuErcojd8lNN6CNCU',
+        'Authorization': 'key=AAAAo5n6f-A:APA91bEGH5RPmnVQHDuhZUZqvFshO2JBv0swt7yEvoho563Rg6a3dMAqUoJm1Imyq43zshYP813lkXmlLBsKCP9OPwqVAht3wDQilY_W4ShOYjJM8R9DWvQH2QYsiHHN9ICD5hUvpTaV',
         'Content-Type': 'application/json; UTF-8',
     }
     #url = 'https://fcm.googleapis.com/v1/projects/zariz-204206/messages:send'
@@ -1459,8 +1464,10 @@ def sendPushNotificationMessageGeneral(body, bodyMessage, http, job, device, w):
     try:
         #device.send_message(title="הצעת עבודה", body=bodyMessage, data={"test": "test"})
         #r = requests.post(url, headers=headers);
-        
+        b = json.dumps(body)
+        logging.info("sendPushNotificationMessageGeneral, json dump {}".format(b))
         r = http.request('POST', url, headers=headers,body=json.dumps(body))
+        logging.info("sendPushNotificationMessageGeneral, after http request {}".format(r.data))
         if w is not None:   
             #if ast.literal_eval(r.data)["success"]==1:
             if ast.literal_eval(str(str(r.data)[2:-1]))["success"]==1:

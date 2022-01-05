@@ -14,6 +14,11 @@ sudo killall mysqld
  >create database ZarizDB;
  >source /Users/admin/mysql-dump.sql;
  >exit
- 
 
- 
+
+ GRANT ALL PRIVILEGES ON *.* TO doadmin@5.100.251.45 IDENTIFIED BY l1t9tAPA3XLDuTvB; 
+ CREATE USER 'eladg'@'5.100.251.45' IDENTIFIED BY 'LetMeIn123';
+ GRANT ALL PRIVILEGES ON *.* TO 'eladg'@'5.100.251.45' WITH GRANT OPTION;
+
+
+ ALTER USER doadmin@5.100.251.45 BY 'LetMeIn123';

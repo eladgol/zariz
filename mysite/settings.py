@@ -103,9 +103,12 @@ import sys
 sys.path.append(os.getcwd() + os.sep + 'lib')
 try:
    import MySQLdb  # noqa: F401
+   print("Using MySqldb")
 except ImportError:
    import pymysql
+   print("Using pymysql")
    pymysql.install_as_MySQLdb()
+   print("Installed pymysql")
 
 # [START db_setup]
 print("SSSServer software {}".format(os.getenv('GAE_APPLICATION', '')))
@@ -117,10 +120,12 @@ if os.getenv('GAE_APPLICATION', None):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '/cloudsql/zariz-204206:europe-west1:root2',
+            #'HOST': '/cloudsql/zariz-204206:europe-west1:root2',
+            'HOST': 'zariz-204206-db-do-user-6984561-0.b.db.ondigitalocean.com',
+            'PORT': '25060',
             'NAME': 'ZarizDB',
-            'USER': 'root',
-            'PASSWORD': 'LetMeIn123',
+            'USER': 'doadmin',
+            'PASSWORD': 'l1t9tAPA3XLDuTvB',
         }
     }
     INSTALLED_APPS = (
@@ -133,6 +138,7 @@ if os.getenv('GAE_APPLICATION', None):
         'django.contrib.messages',
         'django.contrib.staticfiles',
         'django.contrib.sites',
+        'sslserver'
     )
 
 else:
@@ -155,13 +161,20 @@ else:
     # }
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'NAME': 'ZarizDB',
-            'USER': 'root',
-            'PASSWORD': 'LetMeIn123',
+            # 'ENGINE': 'django.db.backends.mysql',
+            # 'HOST': '127.0.0.1',
+            # 'PORT': '3306',
+            # 'NAME': 'ZarizDB',
+            # 'USER': 'root',
+            # 'PASSWORD': 'LetMeIn123',
     
+             'ENGINE': 'django.db.backends.mysql',
+            #'HOST': '/cloudsql/zariz-204206:europe-west1:root2',
+            'HOST': 'Zariz-204206-db-do-user-6984561-0.b.db.ondigitalocean.com',
+            'PORT': '25060',
+            'NAME': 'ZarizDB',
+            'USER': 'doadmin',
+            'PASSWORD': 'l1t9tAPA3XLDuTvB',
 
   #  		'USER': 'elad',
   #          'PASSWORD': '',
